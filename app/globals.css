@@ -74,3 +74,23 @@
   padding: 2px 9px; border-radius: 999px;
   font-size: 11px; font-weight: 700; letter-spacing: 0.02em;
 }
+
+/* ── Export prevention ─────────────────────────────────────────────────────── */
+@media print {
+  * { display: none !important; }
+  body::after {
+    content: 'This document is confidential. Printing is disabled.';
+    display: block !important;
+    font-size: 24px;
+    text-align: center;
+    margin-top: 40vh;
+  }
+}
+/* Disable text selection on sensitive data */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+}
+/* Disable right-click context menu via CSS hint (JS handles actual block) */
+body { -webkit-touch-callout: none; }

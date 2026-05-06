@@ -1,8 +1,7 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getDatabase, Database } from 'firebase/database'
+import { getAuth, Auth } from 'firebase/auth'
 
-// Config with env var fallbacks to hardcoded values
-// (all NEXT_PUBLIC values — safe to include in client bundle)
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY            ?? 'AIzaSyDzc3Pi7ebjleu8HcKofbm18xLXEauz0pk',
   authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN        ?? 'hospital-db-b826d.firebaseapp.com',
@@ -13,11 +12,17 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             ?? '1:883396566712:web:f30904bf15753b1217de4d',
 }
 
-function getFirebaseDb(): Database {
-  if (getApps().length === 0) {
-    initializeApp(firebaseConfig)
-  }
-  return getDatabase(getApp())
+function getFirebaseApp() {
+  if (getApps().length === 0) return initializeApp(firebaseConfig)
+  return getApp()
 }
 
-export { getFirebaseDb as getDb }
+function getDb(): Database {
+  return getDatabase(getFirebaseApp())
+}
+
+function getFirebaseAuth(): Auth {
+  return getAuth(getFirebaseApp())
+}
+
+export { getDb, getFirebaseAuth }
