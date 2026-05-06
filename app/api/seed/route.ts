@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { db } from '@/lib/firebase'
+import { getDb } from '@/lib/firebase'
 import { ref, set, remove } from 'firebase/database'
 import { IDN_GROUPS, IDN_HOSPITALS, HOSPITALS_DATA } from '@/lib/seedData'
 
 export async function POST() {
   try {
+    const db = getDb()
     // Clear existing data
     await Promise.all([
       remove(ref(db, 'idn_groups')),

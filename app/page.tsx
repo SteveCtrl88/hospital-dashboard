@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { db } from '@/lib/firebase'
+import { getDb } from '@/lib/firebase'
 import { ref, get } from 'firebase/database'
 import type { Hospital, IDNGroup, IDNHospital } from '@/lib/supabase'
 import {
@@ -428,6 +428,7 @@ export default function DashboardPage() {
   async function loadData() {
     setLoading(true)
     try {
+      const db = getDb()
       const [hSnap, gSnap, ihSnap] = await Promise.all([
         get(ref(db, 'hospitals')),
         get(ref(db, 'idn_groups')),
