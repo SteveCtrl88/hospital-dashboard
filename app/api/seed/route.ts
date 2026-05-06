@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebase'
 import { ref, set, remove } from 'firebase/database'
 import { IDN_GROUPS, IDN_HOSPITALS, HOSPITALS_DATA } from '@/lib/seedData'
+import { CAMPUS_DATA, getCampusProfile } from '@/lib/campusData'
 
 // Verified large hospitals from Definitive Health Aug 2025 + Becker's Dec 2024
 // These override any duplicates in the base dataset with correct bed counts
@@ -169,13 +170,27 @@ export async function POST() {
     } catch (e) { cmsError = String(e) }
 
     const allHospitals = Array.from(existing.values())
+    
+    // Enrich with campus complexity data
     const hospitalsData: Record<string, object> = {}
-    allHospitals.forEach((h, i) => { const id = `hosp_${i}`; hospitalsData[id] = { ...(h as object), id } })
+    allHospitals.forEach((h, i) => {
+      const hosp = h as { name: string; state: string }
+      const campus = getCampusProfile(hosp.name, hosp.state)
+      const id = `hosp_${i}`
+      hospitalsData[id] = {
+        ...(h as object),
+        id,
+        campus_type: campus?.campus_type ?? null,
+        estimated_deployments: campus?.estimated_deployments ?? null,
+        building_count: campus?.building_count ?? null,
+        campus_notes: campus?.notes ?? null,
+      }
+    })
     await set(ref(db, 'hospitals'), hospitalsData)
 
     return NextResponse.json({
       success: true,
-      counts: { idn_groups: IDN_GROUPS.length, idn_hospitals: ihCount, hospitals: allHospitals.length, verified_large: VERIFIED_LARGE.length, from_dh: HOSPITALS_DATA.length, from_cms: cmsCount },
+      counts: { idn_groups: IDN_GROUPS.length, idn_hospitals: ihCount, hospitals: allHospitals.length, verified_large: VERIFIED_LARGE.length, from_dh: HOSPITALS_DATA.length, from_cms: cmsCount, with_campus_data: CAMPUS_DATA.length },
       cms_error: cmsError,
     })
   } catch (e: unknown) {

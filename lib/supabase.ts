@@ -9,6 +9,10 @@ export interface Hospital {
   idn_rank: number | null
   type: string | null
   ownership: string | null
+  campus_type: string | null
+  estimated_deployments: number | null
+  building_count: number | null
+  campus_notes: string | null
 }
 
 export interface IDNGroup {
@@ -32,3 +36,11 @@ export interface IDNHospital {
   state: string
   beds: number | null
 }
+
+// Campus complexity types
+export type CampusType = 
+  | 'Single Building'       // One main structure, single deployment unit
+  | 'Multi-Tower'           // Connected towers/wings, still one deployment but complex
+  | 'Multi-Building Campus' // Separate buildings on same site, each needs own fleet
+  | 'Multi-Site Licensed'   // Multiple physically separate locations under one CMS number
+

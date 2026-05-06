@@ -10,6 +10,20 @@ import Image from 'next/image'
 // ── colour helpers ─────────────────────────────────────────────────────────────
 const bedColour = (b:number|null) => !b?'#4a5a72':b>=1000?'#ef4444':b>=500?'#f97316':b>=300?'#eab308':b>=100?'#10b981':'#14b8a6'
 const ownerColour = (t:string) => t==='For-Profit'?'#f59e0b':t==='Non-Profit'?'#10b981':t==='Government'?'#6366f1':'#4a5a72'
+const campusColour = (t:string|null) => {
+  if (!t) return '#4a5a72'
+  if (t === 'Multi-Site Licensed') return '#ef4444'
+  if (t === 'Multi-Building Campus') return '#f97316'
+  if (t === 'Multi-Tower') return '#eab308'
+  return '#10b981' // Single Building
+}
+const campusIcon = (t:string|null) => {
+  if (!t) return '—'
+  if (t === 'Multi-Site Licensed') return '🔴 Multi-Site'
+  if (t === 'Multi-Building Campus') return '🟠 Multi-Bldg'
+  if (t === 'Multi-Tower') return '🟡 Multi-Tower'
+  return '🟢 Single'
+}
 const BED_CATS = [
   {label:'<100',min:0,max:99,fill:'#14b8a6'},{label:'100–199',min:100,max:199,fill:'#10b981'},
   {label:'200–299',min:200,max:299,fill:'#eab308'},{label:'300–399',min:300,max:399,fill:'#f97316'},
@@ -191,6 +205,7 @@ function HospitalsTab({hospitals}:{hospitals:Hospital[]}){
   const [stateF,setStateF]=useState('ALL')
   const [ownerF,setOwnerF]=useState('ALL')
   const [minBeds,setMinBeds]=useState(0)
+  const [campusF,setCampusF]=useState('ALL')
   const [sort,setSort]=useState<'beds_desc'|'beds_asc'|'name'|'state'>('beds_desc')
   const [page,setPage]=useState(0)
   const PG=50
@@ -204,6 +219,7 @@ function HospitalsTab({hospitals}:{hospitals:Hospital[]}){
       &&(stateF==='ALL'||h.state===stateF)
       &&(ownerF==='ALL'||h.ownership===ownerF)
       &&(!minBeds||(h.beds!==null&&h.beds>=minBeds))
+      &&(campusF==='ALL'||h.campus_type===campusF||(campusF==='profiled'&&h.campus_type!==null))
     )
     h.sort((a,b)=>sort==='beds_desc'?(b.beds??0)-(a.beds??0):sort==='beds_asc'?(a.beds??0)-(b.beds??0):sort==='name'?a.name.localeCompare(b.name):a.state.localeCompare(b.state))
     return h
@@ -219,7 +235,7 @@ function HospitalsTab({hospitals}:{hospitals:Hospital[]}){
         <StatCard label="Total Hospitals" value={hospitals.length.toLocaleString()} sub="In this database" colour="var(--accent2)" delay={0}/>
         <StatCard label="> 500 Beds" value={hospitals.filter(h=>(h.beds??0)>500).length.toLocaleString()} sub="Large medical centers" colour="var(--orange)" delay={60}/>
         <StatCard label="> 800 Beds" value={hospitals.filter(h=>(h.beds??0)>800).length.toLocaleString()} sub="Major regional centers" colour="var(--red)" delay={120}/>
-        <StatCard label="Largest Campus" value={Math.max(...hospitals.map(h=>h.beds??0)).toLocaleString()} sub="Beds (NYP Weill Cornell)" colour="#991b1b" delay={180}/>
+        <StatCard label="Est. Deployments" value={hospitals.filter(h=>h.campus_type).reduce((a,h)=>a+(h.estimated_deployments??1),0).toLocaleString()} sub="Autonomi fleet units (profiled)" colour="#8b5cf6" delay={180}/>
       </div>
 
       <div style={{...C.card(),marginBottom:20}} className="fade-up-1">
@@ -249,6 +265,14 @@ function HospitalsTab({hospitals}:{hospitals:Hospital[]}){
           <option value={0}>All Sizes</option><option value={100}>100+ beds</option><option value={200}>200+ beds</option>
           <option value={300}>300+ beds</option><option value={500}>500+ beds</option><option value={800}>800+ beds</option><option value={1000}>1000+ beds</option>
         </select>
+        <select style={C.select()} value={campusF} onChange={e=>{setCampusF(e.target.value);setPage(0)}}>
+          <option value="ALL">All Campus Types</option>
+          <option value="profiled">Profiled Only</option>
+          <option value="Multi-Site Licensed">🔴 Multi-Site Licensed</option>
+          <option value="Multi-Building Campus">🟠 Multi-Building</option>
+          <option value="Multi-Tower">🟡 Multi-Tower</option>
+          <option value="Single Building">🟢 Single Building</option>
+        </select>
         <select style={C.select()} value={sort} onChange={e=>setSort(e.target.value as typeof sort)}>
           <option value="beds_desc">Beds ↓</option><option value="beds_asc">Beds ↑</option><option value="name">Name A–Z</option><option value="state">State A–Z</option>
         </select>
@@ -259,7 +283,7 @@ function HospitalsTab({hospitals}:{hospitals:Hospital[]}){
         <div style={{overflowX:'auto'}}>
           <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
             <thead>
-              <tr>{['#','Hospital','Location','Beds','Type','Network','Ownership'].map(h=><th key={h} style={C.th()}>{h}</th>)}</tr>
+              <tr>{['#','Hospital','Location','Beds','Campus Type','Deployments','Network','Ownership'].map(h=><th key={h} style={C.th()}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {paged.map((h,i)=>(
@@ -273,12 +297,28 @@ function HospitalsTab({hospitals}:{hospitals:Hospital[]}){
                   </td>
                   <td style={{...C.td(),whiteSpace:'nowrap'}}><div style={{fontSize:13,color:'var(--text2)'}}>{h.city}</div><div style={{fontSize:11,fontWeight:700,color:'var(--text3)'}}>{h.state}</div></td>
                   <td style={{...C.td(),whiteSpace:'nowrap'}}>{h.beds?<BedBar beds={h.beds}/>:<span style={{color:'var(--text3)',fontSize:11}}>—</span>}</td>
-                  <td style={C.td()}>{h.type?<span style={{fontSize:11,color:'var(--text2)',background:'var(--surface2)',padding:'2px 7px',borderRadius:4,whiteSpace:'nowrap'}}>{h.type==='Academic Medical Center'?'Academic':h.type==='General Acute Care'?'Acute Care':h.type}</span>:<span style={{color:'var(--text3)'}}>—</span>}</td>
+                  <td style={C.td()}>
+                    {h.campus_type ? (
+                      <div>
+                        <span style={{fontSize:11,color:campusColour(h.campus_type),background:campusColour(h.campus_type)+'18',padding:'2px 7px',borderRadius:4,fontWeight:700,whiteSpace:'nowrap',border:`1px solid ${campusColour(h.campus_type)}33`}}>
+                          {h.campus_type === 'Multi-Site Licensed' ? 'Multi-Site' : h.campus_type === 'Multi-Building Campus' ? 'Multi-Bldg' : h.campus_type === 'Multi-Tower' ? 'Multi-Tower' : 'Single'}
+                        </span>
+                        {h.building_count && <div style={{fontSize:10,color:'var(--text3)',marginTop:2}}>{h.building_count} buildings</div>}
+                      </div>
+                    ) : <span style={{color:'var(--text3)',fontSize:11}}>—</span>}
+                  </td>
+                  <td style={{...C.td(),textAlign:'center' as const}}>
+                    {h.estimated_deployments ? (
+                      <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:28,height:28,borderRadius:'50%',background:'rgba(139,92,246,0.15)',border:'1px solid rgba(139,92,246,0.3)',fontSize:13,fontWeight:800,color:'#8b5cf6'}}>
+                        {h.estimated_deployments}
+                      </div>
+                    ) : <span style={{color:'var(--text3)',fontSize:11}}>1</span>}
+                  </td>
                   <td style={C.td()}>{h.idn_name?<span style={{fontSize:11,background:'rgba(59,130,246,0.1)',color:'var(--accent2)',padding:'2px 7px',borderRadius:4,border:'1px solid rgba(59,130,246,0.2)',whiteSpace:'nowrap'}}>{h.idn_name}</span>:<span style={{color:'var(--text3)',fontSize:11}}>Independent</span>}</td>
                   <td style={C.td()}>{h.ownership&&<Badge text={h.ownership} colour={ownerColour(h.ownership)}/>}</td>
                 </tr>
               ))}
-              {paged.length===0&&<tr><td colSpan={7} style={{padding:'40px',textAlign:'center',color:'var(--text3)'}}>No hospitals match these filters</td></tr>}
+              {paged.length===0&&<tr><td colSpan={8} style={{padding:'40px',textAlign:'center',color:'var(--text3)'}}>No hospitals match these filters</td></tr>}
             </tbody>
           </table>
         </div>
