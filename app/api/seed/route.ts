@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server'
 import { getDb } from '@/lib/firebase'
-import { ref, set, remove } from 'firebase/database'
+import { ref, set, remove, get } from 'firebase/database'
 import { IDN_GROUPS, IDN_HOSPITALS, HOSPITALS_DATA } from '@/lib/seedData'
 
 export async function POST() {
   try {
     const db = getDb()
+
     // Clear existing data
     await Promise.all([
       remove(ref(db, 'idn_groups')),
@@ -13,7 +14,7 @@ export async function POST() {
       remove(ref(db, 'hospitals')),
     ])
 
-    // Seed IDN groups — keyed by rank
+    // Seed IDN groups
     const idnGroupsData: Record<string, object> = {}
     for (const g of IDN_GROUPS) {
       const id = `idn_${g.rank}`
@@ -21,7 +22,7 @@ export async function POST() {
     }
     await set(ref(db, 'idn_groups'), idnGroupsData)
 
-    // Seed IDN hospitals — keyed by idn_rank + index
+    // Seed IDN hospitals
     const idnHospitalsData: Record<string, object> = {}
     let ihCount = 0
     for (const { idn_rank, hospitals } of IDN_HOSPITALS) {
@@ -33,20 +34,29 @@ export async function POST() {
     }
     await set(ref(db, 'idn_hospitals'), idnHospitalsData)
 
-    // Seed hospitals — keyed by index
-    const hospitalsData: Record<string, object> = {}
-    HOSPITALS_DATA.forEach((h, i) => {
-      const id = `hosp_${i}`
-      hospitalsData[id] = { ...h, id }
-    })
-    await set(ref(db, 'hospitals'), hospitalsData)
+    // Seed all hospitals in batches of 500 to stay within Firebase payload limits
+    const BATCH = 500
+    let hCount = 0
+    for (let start = 0; start < HOSPITALS_DATA.length; start += BATCH) {
+      const chunk = HOSPITALS_DATA.slice(start, start + BATCH)
+      const batchData: Record<string, object> = {}
+      chunk.forEach((h, j) => {
+        const id = `hosp_${start + j}`
+        batchData[id] = { ...h, id }
+        hCount++
+      })
+      // Merge into existing data for this path
+      const existingSnap = await get(ref(db, 'hospitals'))
+      const existing = existingSnap.exists() ? existingSnap.val() as Record<string, object> : {}
+      await set(ref(db, 'hospitals'), { ...existing, ...batchData })
+    }
 
     return NextResponse.json({
       success: true,
       counts: {
         idn_groups: IDN_GROUPS.length,
         idn_hospitals: ihCount,
-        hospitals: HOSPITALS_DATA.length,
+        hospitals: hCount,
       }
     })
   } catch (e: unknown) {
