@@ -190,7 +190,9 @@ function SeederPanel({ onDone }: { onDone: () => void }) {
       const data = await res.json()
       if (data.success) {
         setStatus('done')
-        setMsg(`✓ Seeded ${data.counts.idn_groups} IDN groups · ${data.counts.idn_hospitals} IDN hospitals · ${data.counts.hospitals} hospitals`)
+        const c = data.counts
+        const cmsNote = c.from_cms_api > 0 ? ` (${c.from_definitive_health} Definitive Health + ${c.from_cms_api} CMS)` : ''
+        setMsg(`✓ ${c.hospitals.toLocaleString()} hospitals${cmsNote} · ${c.idn_groups} IDN groups`)
         setTimeout(onDone, 2000)
       } else { setStatus('error'); setMsg(data.error) }
     } catch (e) { setStatus('error'); setMsg(String(e)) }
@@ -734,7 +736,7 @@ export default function DashboardPage() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400, gap: 16 }}>
             <RefreshCw size={28} style={{ color: 'var(--accent)', animation: 'spin 1s linear infinite' }} />
-            <div style={{ fontSize: 14, color: 'var(--text2)' }}>Loading from Firebase…</div>
+        <div style={{ fontSize: 14, color: 'var(--text2)' }}>Loading hospitals from Firebase…</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 200px)', gap: 16, marginTop: 24 }}>
               {[...Array(4)].map((_, i) => <div key={i} className="skeleton" style={{ height: 90 }} />)}
             </div>
