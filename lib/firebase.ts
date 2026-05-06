@@ -1,20 +1,23 @@
 import { initializeApp, getApps, getApp } from 'firebase/app'
 import { getDatabase, Database } from 'firebase/database'
 
+// Config with env var fallbacks to hardcoded values
+// (all NEXT_PUBLIC values — safe to include in client bundle)
+const firebaseConfig = {
+  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY            ?? 'AIzaSyDzc3Pi7ebjleu8HcKofbm18xLXEauz0pk',
+  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN        ?? 'hospital-db-b826d.firebaseapp.com',
+  databaseURL:       process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL       ?? 'https://hospital-db-b826d-default-rtdb.europe-west1.firebasedatabase.app',
+  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID         ?? 'hospital-db-b826d',
+  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET     ?? 'hospital-db-b826d.firebasestorage.app',
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '883396566712',
+  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             ?? '1:883396566712:web:f30904bf15753b1217de4d',
+}
+
 function getFirebaseDb(): Database {
   if (getApps().length === 0) {
-    initializeApp({
-      apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      databaseURL:       process.env.NEXT_PUBLIC_FIREBASE_DATABASE_URL,
-      projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    })
+    initializeApp(firebaseConfig)
   }
   return getDatabase(getApp())
 }
 
 export { getFirebaseDb as getDb }
-export const db = typeof window !== 'undefined' ? getFirebaseDb() : null as unknown as Database
