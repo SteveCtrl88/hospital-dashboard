@@ -3,6 +3,7 @@ import { getDb } from '@/lib/firebase'
 import { ref, set, remove } from 'firebase/database'
 import { IDN_GROUPS, IDN_HOSPITALS, HOSPITALS_DATA } from '@/lib/seedData'
 import { CAMPUS_DATA, getCampusProfile } from '@/lib/campusData'
+import { VERIFIED_BEDS_500_PLUS } from '@/lib/verifiedBeds'
 
 // Verified large hospitals from Definitive Health Aug 2025 + Becker's Dec 2024
 // These override any duplicates in the base dataset with correct bed counts
@@ -147,13 +148,19 @@ export async function POST() {
     // then add DH CSV data, then CMS data — deduplicating by name+state
     const existing = new Map<string, object>()
     
-    // 1. Verified large hospitals go in first (highest confidence)
-    for (const h of VERIFIED_LARGE) {
+    // Priority 1: Verified beds from AHD/DH/Becker's (most accurate bed counts)
+    for (const h of VERIFIED_BEDS_500_PLUS) {
       const key = `${h.name.toLowerCase().trim()}|${h.state}`
       existing.set(key, h)
     }
     
-    // 2. Definitive Health CSV data
+    // Priority 2: Our manually researched large hospitals
+    for (const h of VERIFIED_LARGE) {
+      const key = `${h.name.toLowerCase().trim()}|${h.state}`
+      if (!existing.has(key)) existing.set(key, h)
+    }
+    
+    // Priority 3: Definitive Health CSV (has bed data for medium hospitals)
     for (const h of HOSPITALS_DATA) {
       const key = `${h.name.toLowerCase().trim()}|${h.state}`
       if (!existing.has(key)) existing.set(key, h)
@@ -190,7 +197,7 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      counts: { idn_groups: IDN_GROUPS.length, idn_hospitals: ihCount, hospitals: allHospitals.length, verified_large: VERIFIED_LARGE.length, from_dh: HOSPITALS_DATA.length, from_cms: cmsCount, with_campus_data: CAMPUS_DATA.length },
+      counts: { idn_groups: IDN_GROUPS.length, idn_hospitals: ihCount, hospitals: allHospitals.length, verified_large: VERIFIED_LARGE.length + VERIFIED_BEDS_500_PLUS.length, from_dh: HOSPITALS_DATA.length, from_cms: cmsCount, with_campus_data: CAMPUS_DATA.length },
       cms_error: cmsError,
     })
   } catch (e: unknown) {
