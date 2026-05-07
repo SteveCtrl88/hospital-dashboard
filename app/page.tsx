@@ -236,14 +236,14 @@ function HospitalsTab({hospitals}:{hospitals:Hospital[]}){
   return (
     <div className="fade-up">
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:14,marginBottom:20}}>
-        <StatCard label="Total Hospitals" value={hospitals.length.toLocaleString()} sub="In this database" colour="var(--accent2)" delay={0}/>
-        <StatCard label="> 500 Beds" value={hospitals.filter(h=>(h.beds??0)>500).length.toLocaleString()} sub="Large medical centers" colour="var(--orange)" delay={60}/>
-        <StatCard label="> 800 Beds" value={hospitals.filter(h=>(h.beds??0)>800).length.toLocaleString()} sub="Major regional centers" colour="var(--red)" delay={120}/>
+        <StatCard label="Hospitals in Database" value={hospitals.length.toLocaleString()} sub={`of ~6,093 US registered hospitals (AHA 2024)`} colour="var(--accent2)" delay={0}/>
+        <StatCard label="With Bed Data" value={hospitals.filter(h=>h.beds).length.toLocaleString()} sub={`${Math.round(hospitals.filter(h=>h.beds).length/6093*100)}% coverage · AHA total ~917,000 beds`} colour="var(--green)" delay={60}/>
+        <StatCard label="> 500 Beds" value={hospitals.filter(h=>(h.beds??0)>=500).length.toLocaleString()} sub="Verified large medical centers" colour="var(--orange)" delay={120}/>
         <StatCard label="Est. Deployments" value={hospitals.filter(h=>h.campus_type).reduce((a,h)=>a+(h.estimated_deployments??1),0).toLocaleString()} sub="Autonomi fleet units (profiled)" colour="#8b5cf6" delay={180}/>
       </div>
 
       <div style={{...C.card(),marginBottom:20}} className="fade-up-1">
-        <div style={C.cardHead()}><span style={C.cardTitle()}>Distribution by Bed Size</span><span style={{fontSize:11,color:'var(--text3)'}}>{hospitals.filter(h=>h.beds).length.toLocaleString()} with bed data</span></div>
+        <div style={C.cardHead()}><span style={C.cardTitle()}>Distribution by Bed Size</span><span style={{fontSize:11,color:'var(--text3)'}}>{hospitals.filter(h=>h.beds).length.toLocaleString()} with verified bed data · AHA 2024: ~917K total US staffed beds</span></div>
         <div style={{padding:'16px 16px 8px'}}>
           <ResponsiveContainer width="100%" height={170}>
             <BarChart data={distData} margin={{top:4,right:4,bottom:0,left:-10}}>
@@ -499,8 +499,8 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
           <div style={{display:'flex',gap:32,flexWrap:'wrap' as const}}>
             {[
               {v:'7,800+', l:'Hospitals in database',    c:'#60a5fa'},
-              {v:above500.toLocaleString(), l:'Verified 500+ bed facilities', c:'#f97316'},
-              {v:above300.toLocaleString(), l:'Verified 300+ bed facilities', c:'#10b981'},
+              {v:'~917,000', l:'Total US staffed beds (AHA 2024)', c:'#f97316'},
+              {v:above500.toLocaleString(), l:'Verified 500+ bed facilities', c:'#10b981'},
               {v:'0.056',  l:'Robots per bed (conservative)', c:'#8b5cf6'},
             ].map(({v,l,c})=>(
               <div key={l}>
