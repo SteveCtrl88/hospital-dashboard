@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, CSSProperties, useCallback } from 'react'
 import { getDb, getFirebaseAuth } from '@/lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots } from '@/lib/thesisData'
+import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots, NEAR_TERM, PROFILED_HOSPITALS, ROBOTS_PER_BED } from '@/lib/thesisData'
 import { useRouter } from 'next/navigation'
 import { ref, get } from 'firebase/database'
 import type { Hospital, IDNGroup, IDNHospital } from '@/lib/supabase'
