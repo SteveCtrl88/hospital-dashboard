@@ -185,6 +185,30 @@ export const BED_SIZE_ROBOTS = [
   { label: '3,000 beds', beds: 3000, robots: 168 },
 ]
 
+
+// ── 7-Year Deployment Ramp ────────────────────────────────────────────────────
+// Year 1–2: Validation phase (max 200 robots — long sales cycle, biz case development)
+// Year 3–7: Scale phase (ramp to 2,345 total robots)
+export const DEPLOYMENT_RAMP = [
+  { year: 1, label: "2026", phase: "Validation",  newRobots:  50, description: "2 live IDN deployments + 6 pilots converting. Market validation and reference case development." },
+  { year: 2, label: "2027", phase: "Validation",  newRobots: 150, description: "First IDN system-wide contract signed. Business case proven. Sales cycle compression begins." },
+  { year: 3, label: "2028", phase: "Early Scale", newRobots: 300, description: "3–4 new hospital system contracts. Reference customers driving inbound pipeline growth." },
+  { year: 4, label: "2029", phase: "Growth",      newRobots: 450, description: "Procurement cycle shortens with established references. 6–8 new contracts per year." },
+  { year: 5, label: "2030", phase: "Growth",      newRobots: 550, description: "SAM penetration deepening. IDN-wide rollouts across multi-site hospital networks." },
+  { year: 6, label: "2031", phase: "Scale",       newRobots: 500, description: "Premium tier (800+ bed) hospitals entering. Multi-building deployments dominating pipeline." },
+  { year: 7, label: "2032", phase: "Scale",       newRobots: 345, description: "34-campus pipeline complete. Transition to renewal cycle and broader SAM expansion." },
+].map((y, i, arr) => {
+  const cumulative = arr.slice(0, i + 1).reduce((a, r) => a + r.newRobots, 0)
+  return {
+    ...y,
+    cumulative,
+    grossMRR:  cumulative * 2500,
+    netMRR:    cumulative * 1500,
+    netARR:    cumulative * 18000,
+    capexYear: y.newRobots * 10000,
+  }
+})
+
 export const KEY_ASSUMPTIONS = [
   {
     title: 'Revenue Model — $2,500 Gross / $1,500 Net Per Robot Per Month',

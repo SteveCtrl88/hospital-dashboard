@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, CSSProperties, useCallback } from 'react'
 import { getDb, getFirebaseAuth } from '@/lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots, NEAR_TERM, PROFILED_HOSPITALS, ROBOTS_PER_BED, REVENUE_MODEL } from '@/lib/thesisData'
+import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots, NEAR_TERM, PROFILED_HOSPITALS, ROBOTS_PER_BED, REVENUE_MODEL, DEPLOYMENT_RAMP } from '@/lib/thesisData'
 import { useRouter } from 'next/navigation'
 import { ref, get } from 'firebase/database'
 import type { Hospital, IDNGroup, IDNHospital } from '@/lib/supabase'
@@ -550,24 +550,108 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             ))}
           </div>
 
-          {/* Near-term revenue snapshot */}
-          <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,padding:"16px 20px"}}>
-            <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:10,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>Near-Term Pipeline Revenue — 34 Profiled Campuses</div>
-            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
+          {/* Near-term pipeline summary */}
+          <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,padding:"16px 20px",marginBottom:16}}>
+            <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:12,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>Full Deployment Target — 34 Profiled Campuses</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16}}>
               {[
-                {v:nearRobots.toLocaleString(),                    l:"Total robots deployed",            c:"#8b5cf6"},
-                {v:`$${(nearCapex/1000000).toFixed(1)}M`,         l:"Capex required (upfront)",         c:"#f59e0b"},
-                {v:`$${(nearGrossMRR/1000000).toFixed(1)}M`,      l:"Gross MRR at full deployment",     c:"#3b82f6"},
-                {v:`$${(nearNetMRR/1000000).toFixed(1)}M`,        l:"Net MRR to Autonomi (60%)",        c:"#10b981"},
-                {v:`$${(nearNetARR/1000000).toFixed(1)}M`,        l:"Net ARR",                          c:"#10b981"},
-                {v:`$${(nearContractVal/1000000).toFixed(0)}M`,   l:"Total net contract value (6yr)",   c:"#6366f1"},
-                {v:`$${(nearTrueProfit/1000000).toFixed(0)}M`,    l:"True profit after capex recovery", c:"#ef4444"},
+                {v:nearRobots.toLocaleString(),                    l:"Total robots",                    c:"#8b5cf6"},
+                {v:`$${(nearCapex/1000000).toFixed(1)}M`,         l:"Total capex (Autonomi absorbs)",  c:"#f59e0b"},
+                {v:`$${(nearGrossMRR/1000000).toFixed(1)}M`,      l:"Gross MRR at full deployment",    c:"#3b82f6"},
+                {v:`$${(nearNetMRR/1000000).toFixed(1)}M`,        l:"Net MRR to Autonomi",             c:"#10b981"},
+                {v:`$${(nearNetARR/1000000).toFixed(1)}M`,        l:"Net ARR at full deployment",      c:"#10b981"},
+                {v:`$${(nearContractVal/1000000).toFixed(0)}M`,   l:"6yr net contract value",          c:"#6366f1"},
+                {v:`$${(nearTrueProfit/1000000).toFixed(0)}M`,    l:"True profit after capex",         c:"#ef4444"},
               ].map(({v,l,c})=>(
                 <div key={l}>
-                  <div style={{fontSize:24,fontWeight:900,color:c,lineHeight:1}}>{v}</div>
-                  <div style={{fontSize:11,color:"var(--text2)",marginTop:4}}>{l}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:c,lineHeight:1}}>{v}</div>
+                  <div style={{fontSize:11,color:"var(--text2)",marginTop:3}}>{l}</div>
                 </div>
               ))}
+            </div>
+          </div>
+
+          {/* 7-Year deployment ramp */}
+          <div style={{...C.card(),overflow:"hidden"}}>
+            <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <span style={C.cardTitle()}>7-Year Deployment Ramp — 2026 to 2032</span>
+              <span style={{fontSize:11,color:"var(--text3)"}}>Year 1–2 capped at 200 robots · validation &amp; business case development</span>
+            </div>
+            {/* Bar chart */}
+            <div style={{padding:"16px 16px 4px"}}>
+              <ResponsiveContainer width="100%" height={160}>
+                <BarChart data={DEPLOYMENT_RAMP} margin={{top:4,right:8,bottom:0,left:-10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/>
+                  <XAxis dataKey="label" tick={{fontSize:11,fill:"var(--text2)"}} axisLine={false} tickLine={false}/>
+                  <YAxis tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false}/>
+                  <Tooltip formatter={(v:unknown)=>[`${(v as number).toLocaleString()} robots`,""]}
+                    contentStyle={{background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}}
+                    labelStyle={{color:"var(--text)"}} itemStyle={{color:"var(--text2)"}}/>
+                  <Bar dataKey="newRobots" name="New Robots" fill="var(--accent)" radius={[4,4,0,0]}>
+                    {DEPLOYMENT_RAMP.map((d,i)=>(
+                      <Cell key={i} fill={d.phase==="Validation"?"#6366f1":d.phase==="Early Scale"?"#3b82f6":d.phase==="Growth"?"#10b981":"#f59e0b"}/>
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <div style={{display:"flex",gap:16,marginTop:4,marginBottom:12,flexWrap:"wrap" as const}}>
+                {[["#6366f1","Validation (Yr 1–2)"],["#3b82f6","Early Scale (Yr 3)"],["#10b981","Growth (Yr 4–5)"],["#f59e0b","Scale (Yr 6–7)"]].map(([c,l])=>(
+                  <div key={l} style={{display:"flex",alignItems:"center",gap:5,fontSize:11,color:"var(--text2)"}}>
+                    <div style={{width:8,height:8,borderRadius:2,background:c}}/>
+                    {l}
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* Year-by-year table */}
+            <div style={{overflowX:"auto" as const}}>
+              <table style={{width:"100%",borderCollapse:"collapse" as const,fontSize:12}}>
+                <thead>
+                  <tr>
+                    {["Year","Phase","New Robots","Total Fleet","Gross MRR","Net MRR (60%)","Net ARR","Cumul Capex","Notes"].map(h=>(
+                      <th key={h} style={{...C.th(),whiteSpace:"nowrap" as const}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {DEPLOYMENT_RAMP.map((y,i)=>{
+                    const phaseColor = y.phase==="Validation"?"#6366f1":y.phase==="Early Scale"?"#3b82f6":y.phase==="Growth"?"#10b981":"#f59e0b"
+                    const cumulCapex = DEPLOYMENT_RAMP.slice(0,i+1).reduce((a,r)=>a+r.capexYear,0)
+                    return (
+                      <tr key={y.year} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                        <td style={{...C.td(),fontWeight:700,color:"var(--text)"}}>{y.label}</td>
+                        <td style={C.td()}>
+                          <span style={{fontSize:11,fontWeight:700,color:phaseColor,background:phaseColor+"18",padding:"2px 7px",borderRadius:4,whiteSpace:"nowrap" as const}}>{y.phase}</span>
+                        </td>
+                        <td style={{...C.td(),textAlign:"center" as const}}>
+                          <span style={{fontFamily:"monospace",fontWeight:700,color:phaseColor,fontSize:13}}>{y.newRobots}</span>
+                        </td>
+                        <td style={{...C.td(),textAlign:"center" as const}}>
+                          <span style={{fontFamily:"monospace",fontWeight:800,color:"var(--text)",fontSize:13}}>{y.cumulative.toLocaleString()}</span>
+                        </td>
+                        <td style={{...C.td(),fontFamily:"monospace",fontSize:12,color:"#3b82f6"}}>${(y.grossMRR/1000).toFixed(0)}K</td>
+                        <td style={{...C.td(),fontFamily:"monospace",fontSize:12,fontWeight:700,color:"#10b981"}}>${(y.netMRR/1000).toFixed(0)}K</td>
+                        <td style={{...C.td(),fontFamily:"monospace",fontSize:12,fontWeight:700,color:"#10b981"}}>${(y.netARR/1000000).toFixed(1)}M</td>
+                        <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"var(--text3)"}}>${(cumulCapex/1000000).toFixed(1)}M</td>
+                        <td style={{...C.td(),fontSize:11,color:"var(--text2)",maxWidth:220}}>{y.description}</td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr style={{background:"var(--surface2)",fontWeight:700}}>
+                    <td style={{...C.td(),fontWeight:800,color:"var(--text)"}}>End Yr 7</td>
+                    <td style={C.td()}/>
+                    <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",color:"#f59e0b",fontWeight:800}}>{nearRobots.toLocaleString()}</td>
+                    <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",fontWeight:900,color:"#f59e0b"}}>{nearRobots.toLocaleString()}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6",fontWeight:700}}>${(nearGrossMRR/1000000).toFixed(1)}M</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(nearNetMRR/1000000).toFixed(1)}M</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(nearNetARR/1000000).toFixed(1)}M</td>
+                    <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)"}}>${(nearCapex/1000000).toFixed(1)}M</td>
+                    <td style={{...C.td(),fontSize:11,color:"var(--text2)"}}>Full 34-campus pipeline deployed</td>
+                  </tr>
+                </tfoot>
+              </table>
             </div>
           </div>
         </div>
