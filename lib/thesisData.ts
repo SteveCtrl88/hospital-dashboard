@@ -21,11 +21,17 @@
 // Deployments = separate fleet installs; robots are SPLIT across them, not multiplied
 
 export const REVENUE_MODEL = {
-  monthly_per_robot:     2500,   // $ gross (from Seed Document)
-  net_pct:               0.15,   // 15% net after ops/commissions
-  net_per_robot_month:   375,    // $2,500 × 15%
-  net_per_robot_year:    4500,   // $375 × 12
-  contract_years:        6,
+  monthly_per_robot:      2500,   // $ gross (fixed, from Seed Document)
+  capex_per_robot:        10000,  // one-time production + installation, absorbed by Autonomi
+  external_pct:           0.40,   // servicing, insurance, ops paid to external parties
+  net_pct:                0.60,   // Autonomi net margin
+  net_per_robot_month:    1500,   // $2,500 × 60%
+  net_per_robot_year:     18000,  // $1,500 × 12
+  contract_years:         6,
+  net_contract_value:     108000, // $18,000 × 6 years
+  payback_months:         6.7,    // $10,000 capex ÷ $1,500 net/month
+  true_profit_per_robot:  98000,  // $108,000 net contract − $10,000 capex
+  capex_return_x:         9.8,    // 9.8× return on capex over 6 years
 }
 
 export const ROBOT_FORMULA = {
@@ -92,15 +98,19 @@ const _totalDeps   = PROFILED_HOSPITALS.reduce((a, h) => a + h.deployments, 0)
 const _totalRobots = PROFILED_HOSPITALS.reduce((a, h) => a + Math.round(h.beds * ROBOTS_PER_BED), 0)
 
 export const NEAR_TERM = {
-  hospitals:        34,
-  total_beds:       _totalBeds,
-  deployments:      _totalDeps,       // 86
-  total_robots:     _totalRobots,     // 2,345
-  robots_per_dep:   Math.round(_totalRobots / _totalDeps),    // ~27
-  robots_per_hosp:  Math.round(_totalRobots / 34),            // ~69
-  // Revenue at $2,500/robot/month gross
-  gross_mrr:        _totalRobots * 2500,
-  net_arr:          _totalRobots * 4500,   // $375/robot/month × 12
+  hospitals:         34,
+  total_beds:        _totalBeds,
+  deployments:       _totalDeps,
+  total_robots:      _totalRobots,
+  robots_per_dep:    Math.round(_totalRobots / _totalDeps),
+  robots_per_hosp:   Math.round(_totalRobots / 34),
+  capex_required:    _totalRobots * 10000,
+  gross_mrr:         _totalRobots * 2500,
+  gross_arr:         _totalRobots * 2500 * 12,
+  net_mrr:           _totalRobots * 1500,
+  net_arr:           _totalRobots * 18000,
+  net_contract_val:  _totalRobots * 108000,
+  true_profit:       _totalRobots * 98000,
 }
 
 // ── Market tiers — revenue from Seed Document, robots from formula ─────────
@@ -142,8 +152,8 @@ export const MARKET_TIERS = [
     deployments: 364,
     total_robots: Math.round(189000 * 0.056),
     revenue_b: 0.647,
-    revenue_label: '$647M/year',
-    revenue_basis: '10% penetration of large hospitals within 5 years (Autonomi Seed Document)',
+    revenue_label: '$647M seed doc / $190M net ARR',
+    revenue_basis: '10% penetration of large hospitals (Seed Doc); 10,584 robots × $18K net ARR',
     color: '#10b981',
     source: 'Autonomi/Ctrl Seed Investment Document; Definitive Health HospitalView Aug 2025',
   },
@@ -177,8 +187,8 @@ export const BED_SIZE_ROBOTS = [
 
 export const KEY_ASSUMPTIONS = [
   {
-    title: 'Revenue Model — $2,500/Robot/Month Gross',
-    body: 'Autonomi operates a Robotics-as-a-Service (RaaS) model with monthly subscription per deployed robot, inclusive of fleet software, AI orchestration, and support. Average monthly gross revenue per robot in the field is $2,500, structured as 6-year contracts with optional upgrade paths. Revenue is split: 59% operations/maintenance/insurance, 26% commissions, 15% net — yielding $375 net per robot per month, or $4,500 net per robot per year.',
+    title: 'Revenue Model — $2,500 Gross / $1,500 Net Per Robot Per Month',
+    body: 'Autonomi operates a Robotics-as-a-Service (RaaS) model at $2,500/robot/month fixed. 40% ($1,000) goes to external parties covering servicing, insurance, and monthly operational expenses. Autonomi retains 60% net — $1,500/robot/month, $18,000/robot/year. Contracts run 6 years, yielding $108,000 net contract value per robot. Autonomi absorbs a $10,000 one-time capex per robot for production and installation, recovered in approximately 6.7 months. After payback, each robot generates $1,500/month in pure net margin for the remaining ~65 months of the contract — a 9.8× return on capex.',
   },
   {
     title: 'TAM/SAM/SOM — From Autonomi Seed Investment Document',
