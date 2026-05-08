@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, CSSProperties, useCallback } from 'react'
 import { getDb, getFirebaseAuth } from '@/lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots, NEAR_TERM, PROFILED_HOSPITALS, ROBOTS_PER_BED } from '@/lib/thesisData'
+import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots, NEAR_TERM, PROFILED_HOSPITALS, ROBOTS_PER_BED, REVENUE_MODEL } from '@/lib/thesisData'
 import { useRouter } from 'next/navigation'
 import { ref, get } from 'firebase/database'
 import type { Hospital, IDNGroup, IDNHospital } from '@/lib/supabase'
@@ -463,111 +463,100 @@ function AdventHealthTab({hospitals}:{hospitals:Hospital[]}){
 
 // ── Market Thesis Tab ─────────────────────────────────────────────────────────
 function ThesisTab({hospitals}:{hospitals:Hospital[]}){
-  const withBeds = hospitals.filter(h=>h.beds&&h.beds>0)
-  const above500 = withBeds.filter(h=>(h.beds??0)>=500).length
-  const above300 = withBeds.filter(h=>(h.beds??0)>=300).length
-  const above800 = withBeds.filter(h=>(h.beds??0)>=800).length
+  const withBeds   = hospitals.filter(h=>h.beds&&h.beds>0)
+  const above500   = withBeds.filter(h=>(h.beds??0)>=500).length
+  const above300   = withBeds.filter(h=>(h.beds??0)>=300).length
+
+  // Revenue calculations from seed document unit economics
+  const nearRobots = NEAR_TERM.total_robots
+  const nearGrossMRR = nearRobots * REVENUE_MODEL.monthly_per_robot
+  const nearNetARR   = nearRobots * REVENUE_MODEL.net_per_robot_year
+  const somRobots  = MARKET_TIERS.find(t=>t.tier==='SOM')!.total_robots
+  const somNetARR  = somRobots * REVENUE_MODEL.net_per_robot_year
 
   const bedRobotData = BED_SIZE_ROBOTS.map(r=>({
     ...r,
-    pharmacy: Math.round((r.robots * (0.008+0.008)/0.056)*10)/10,
-    labs:     Math.round((r.robots * 0.004/0.056)*10)/10,
-    food:     Math.round((r.robots * 0.012/0.056)*10)/10,
-    evs:      Math.round((r.robots * 0.024/0.056)*10)/10,
-  }))
-
-  const funnelData = MARKET_TIERS.map(t=>({
-    name: t.tier, hospitals: t.hospitals, robots: t.total_robots,
-    deployments: t.deployments, color: t.color,
+    pharmacy: Math.round(r.robots * (0.016/0.056) * 10)/10,
+    labs:     Math.round(r.robots * (0.004/0.056) * 10)/10,
+    food:     Math.round(r.robots * (0.012/0.056) * 10)/10,
+    evs:      Math.round(r.robots * (0.024/0.056) * 10)/10,
   }))
 
   return (
     <div className="fade-up no-select">
-      {/* Hero */}
-      <div style={{background:'linear-gradient(135deg,#0a1628 0%,#0d1f3c 50%,#0a1628 100%)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:16,padding:'32px 36px',marginBottom:28,position:'relative',overflow:'hidden'}}>
-        <div style={{position:'absolute',top:-60,right:-60,width:300,height:300,background:'radial-gradient(ellipse,rgba(59,130,246,0.08) 0%,transparent 70%)',pointerEvents:'none'}}/>
-        <div style={{position:'absolute',bottom:-40,left:200,width:200,height:200,background:'radial-gradient(ellipse,rgba(16,185,129,0.06) 0%,transparent 70%)',pointerEvents:'none'}}/>
-        <div style={{position:'relative',zIndex:1}}>
-          <div style={{fontSize:10,fontWeight:700,letterSpacing:'0.15em',textTransform:'uppercase' as const,color:'#60a5fa',marginBottom:10}}>Autonomi · Commercial Intelligence</div>
-          <h1 style={{fontSize:28,fontWeight:900,letterSpacing:'-0.02em',margin:'0 0 12px',color:'#fff',lineHeight:1.2}}>U.S. Hospital Robotics Market<br/>Deployment Thesis</h1>
-          <p style={{margin:'0 0 20px',fontSize:14,color:'rgba(255,255,255,0.6)',lineHeight:1.7,maxWidth:680}}>
-            Autonomi operates at the intersection of hospital logistics complexity and autonomous delivery infrastructure. 
-            This analysis quantifies the addressable robot deployment opportunity across the U.S. acute care hospital market, 
-            grounded in live operational data from Autonomi&apos;s deployed sites and verified bed-count data from Medicare Cost Reports, 
-            AHA Annual Survey 2026, Definitive Health HospitalView, and Becker&apos;s Hospital Review 2026.
+
+      {/* ── HERO ── */}
+      <div style={{background:"linear-gradient(135deg,#0a1628 0%,#0d1f3c 50%,#0a1628 100%)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:16,padding:"32px 36px",marginBottom:24,position:"relative" as const,overflow:"hidden"}}>
+        <div style={{position:"absolute" as const,top:-60,right:-60,width:300,height:300,background:"radial-gradient(ellipse,rgba(59,130,246,0.08) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{position:"absolute" as const,bottom:-40,left:200,width:200,height:200,background:"radial-gradient(ellipse,rgba(16,185,129,0.06) 0%,transparent 70%)",pointerEvents:"none"}}/>
+        <div style={{position:"relative" as const,zIndex:1}}>
+          <div style={{fontSize:10,fontWeight:700,letterSpacing:"0.15em",textTransform:"uppercase" as const,color:"#60a5fa",marginBottom:10}}>Autonomi · Market Intelligence</div>
+          <h1 style={{fontSize:26,fontWeight:900,letterSpacing:"-0.02em",margin:"0 0 10px",color:"#fff",lineHeight:1.2}}>U.S. Hospital Logistics Automation<br/>Investment Thesis</h1>
+          <p style={{margin:"0 0 24px",fontSize:14,color:"rgba(255,255,255,0.6)",lineHeight:1.7,maxWidth:700}}>
+            Hospitals are logistics machines disguised as care providers — and the system is breaking.
+            A 600-bed hospital moves 37,000 items and 90,000 lbs daily, mostly by foot. Nurses and support teams spend
+            countless hours on material movement instead of patient care. The result is a{" "}
+            <strong style={{color:"#fff"}}>$34.46 billion annual internal logistics burden</strong> running almost entirely on manual labour,
+            disconnected systems, and a workforce with 10% vacancy rates and 27% attrition.
+            Autonomi exists to automate this — at scale, across every major US hospital.
           </p>
-          <div style={{display:'flex',gap:32,flexWrap:'wrap' as const}}>
+          <div style={{display:"flex",gap:28,flexWrap:"wrap" as const}}>
             {[
-              {v:'7,800+', l:'Hospitals in database',    c:'#60a5fa'},
-              {v:'~917,000', l:'Total US staffed beds (AHA 2024)', c:'#f97316'},
-              {v:above500.toLocaleString(), l:'Verified 500+ bed facilities', c:'#10b981'},
-              {v:'0.056',  l:'Robots per bed (conservative)', c:'#8b5cf6'},
+              {v:"$34.46B",    l:"Total annual US hospital logistics spend (TAM)", c:"#6366f1"},
+              {v:"$8.6B",      l:"Addressable by automation (SAM)",                c:"#3b82f6"},
+              {v:"$647M",      l:"5-year revenue potential at 10% penetration (SOM)", c:"#10b981"},
+              {v:"$2,500",     l:"Gross monthly revenue per deployed robot",       c:"#f59e0b"},
             ].map(({v,l,c})=>(
               <div key={l}>
                 <div style={{fontSize:26,fontWeight:900,color:c,lineHeight:1}}>{v}</div>
-                <div style={{fontSize:11,color:'rgba(255,255,255,0.4)',marginTop:4}}>{l}</div>
+                <div style={{fontSize:11,color:"rgba(255,255,255,0.4)",marginTop:4,maxWidth:160}}>{l}</div>
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Robot Formula */}
+      {/* ── REVENUE MODEL ── */}
       <div style={{...C.card(),marginBottom:20}}>
-        <div style={C.cardHead()}>
-          <span style={C.cardTitle()}>Robot Density Formula — Derived from Live Deployment Data</span>
-          <span style={{fontSize:11,background:'rgba(139,92,246,0.1)',padding:'2px 10px',borderRadius:999,border:'1px solid rgba(139,92,246,0.2)',fontWeight:700,color:'#8b5cf6'}}>–20% Conservative Factor Applied</span>
-        </div>
-        <div style={{padding:'20px'}}>
-          <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.7,marginBottom:20,maxWidth:800}}>
-            Autonomi&apos;s robot density formula is calibrated from actual throughput data across operating hospital deployments. 
-            Five use cases drive demand: patient-specific pharmacy delivery, pharmacy restock runs, laboratory specimen transport, 
-            food and nutrition delivery, and environmental services. Each ratio has been reduced by 20% from observed figures 
-            to produce a conservative planning baseline. The resulting unified formula — <strong style={{color:'var(--text)'}}>0.056 robots per staffed bed</strong> — 
-            is applied consistently across all market size tiers.
+        <div style={C.cardHead()}><span style={C.cardTitle()}>Revenue Model — Robotics-as-a-Service (RaaS)</span></div>
+        <div style={{padding:"20px"}}>
+          <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.7,marginBottom:20,maxWidth:800}}>
+            Autonomi operates a subscription-based RaaS model — monthly per-robot revenue inclusive of fleet software,
+            AI orchestration, and support. Contracts run 6 years with optional upgrade paths, providing strong recurring
+            revenue visibility and customer lock-in. Average monthly gross revenue per deployed robot is{" "}
+            <strong style={{color:"var(--text)"}}>$2,500</strong>, yielding{" "}
+            <strong style={{color:"var(--text)"}}>$375 net per robot per month</strong> (15% net after 59% ops/maintenance and 26% commissions).
           </p>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12,marginBottom:20}}>
-            {Object.entries(ROBOT_FORMULA).map(([key,f])=>{
-              const colours:{[k:string]:string} = {pharmacy_patient:'#3b82f6',pharmacy_restock:'#6366f1',labs:'#10b981',food:'#f59e0b',evs:'#ef4444'}
-              const c = colours[key]||'#8b5cf6'
-              const ratio = f.ratio
-              return (
-                <div key={key} style={{background:'var(--surface2)',border:`1px solid ${c}33`,borderRadius:10,padding:'14px 16px'}}>
-                  <div style={{fontSize:11,fontWeight:700,color:c,letterSpacing:'0.05em',marginBottom:6,textTransform:'uppercase' as const}}>{f.label}</div>
-                  <div style={{fontSize:22,fontWeight:900,color:'var(--text)',lineHeight:1}}>{ratio.toFixed(3)}</div>
-                  <div style={{fontSize:10,color:'var(--text3)',marginTop:4}}>robots per bed</div>
-                  <div style={{fontSize:11,color:'var(--text2)',marginTop:6,lineHeight:1.4}}>{f.description}</div>
-                </div>
-              )
-            })}
-            <div style={{background:'var(--surface2)',border:'1px solid rgba(139,92,246,0.4)',borderRadius:10,padding:'14px 16px',display:'flex',flexDirection:'column' as const,justifyContent:'center'}}>
-              <div style={{fontSize:11,fontWeight:700,color:'#8b5cf6',letterSpacing:'0.05em',marginBottom:6,textTransform:'uppercase' as const}}>Total Combined</div>
-              <div style={{fontSize:28,fontWeight:900,color:'#8b5cf6',lineHeight:1}}>0.056</div>
-              <div style={{fontSize:10,color:'var(--text3)',marginTop:4}}>robots per bed</div>
-              <div style={{fontSize:11,color:'var(--text2)',marginTop:6}}>= 1 robot per 17.9 beds</div>
-            </div>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,marginBottom:24}}>
+            {[
+              {v:"$2,500",   l:"Gross MRR per robot",      sub:"Monthly subscription",           c:"#3b82f6"},
+              {v:"$375",     l:"Net MRR per robot",         sub:"After 59% ops + 26% commissions",c:"#10b981"},
+              {v:"$4,500",   l:"Net ARR per robot",         sub:"Annual net recurring revenue",    c:"#10b981"},
+              {v:"6 years",  l:"Contract term",             sub:"With upgrade optionality",        c:"#8b5cf6"},
+              {v:"15%",      l:"Net margin",                sub:"Of gross robot revenue",          c:"#f59e0b"},
+              {v:"$30,000",  l:"Net LTV per robot",         sub:"$4,500 × 6-year contract",        c:"#ef4444"},
+            ].map(({v,l,sub,c})=>(
+              <div key={l} style={{background:"var(--surface2)",border:`1px solid ${c}33`,borderRadius:10,padding:"14px 16px"}}>
+                <div style={{fontSize:22,fontWeight:900,color:c,lineHeight:1,marginBottom:4}}>{v}</div>
+                <div style={{fontSize:12,fontWeight:700,color:"var(--text)",marginBottom:3}}>{l}</div>
+                <div style={{fontSize:11,color:"var(--text3)"}}>{sub}</div>
+              </div>
+            ))}
           </div>
 
-          {/* Bed size chart */}
-          <div style={{marginTop:8}}>
-            <div style={{fontSize:11,fontWeight:700,color:'var(--text3)',letterSpacing:'0.08em',textTransform:'uppercase' as const,marginBottom:12}}>Robot Count by Hospital Size</div>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={bedRobotData} margin={{top:4,right:8,bottom:0,left:-10}}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/>
-                <XAxis dataKey="label" tick={{fontSize:10,fill:'var(--text2)'}} axisLine={false} tickLine={false}/>
-                <YAxis tick={{fontSize:10,fill:'var(--text3)'}} axisLine={false} tickLine={false}/>
-                <Tooltip contentStyle={{background:'var(--surface2)',border:'1px solid var(--border)',borderRadius:8,fontSize:12}} labelStyle={{color:'var(--text2)'}} itemStyle={{color:'var(--text)'}}/>
-                <Bar dataKey="pharmacy" name="Pharmacy" stackId="a" fill="#3b82f6" radius={[0,0,0,0]}/>
-                <Bar dataKey="labs"     name="Labs"     stackId="a" fill="#10b981"/>
-                <Bar dataKey="food"     name="Food"     stackId="a" fill="#f59e0b"/>
-                <Bar dataKey="evs"      name="EVS"      stackId="a" fill="#ef4444" radius={[4,4,0,0]}/>
-              </BarChart>
-            </ResponsiveContainer>
-            <div style={{display:'flex',gap:16,marginTop:8,flexWrap:'wrap' as const}}>
-              {[['#3b82f6','Pharmacy'],['#10b981','Labs'],['#f59e0b','Food & Nutrition'],['#ef4444','EVS']].map(([c,l])=>(
-                <div key={l} style={{display:'flex',alignItems:'center',gap:6,fontSize:11,color:'var(--text2)'}}>
-                  <div style={{width:10,height:10,borderRadius:2,background:c,flexShrink:0}}/>
-                  {l}
+          {/* Near-term revenue snapshot */}
+          <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,padding:"16px 20px"}}>
+            <div style={{fontSize:12,fontWeight:700,color:"#f59e0b",marginBottom:10,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>Near-Term Pipeline Revenue — 34 Profiled Campuses</div>
+            <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))",gap:16}}>
+              {[
+                {v:nearRobots.toLocaleString(),                l:"Total robots deployed",          c:"#8b5cf6"},
+                {v:`$${(nearGrossMRR/1000000).toFixed(1)}M`,  l:"Gross MRR",                      c:"#3b82f6"},
+                {v:`$${(nearNetARR/1000000).toFixed(1)}M`,    l:"Net ARR",                        c:"#10b981"},
+                {v:`$${(nearNetARR*6/1000000).toFixed(0)}M`,  l:"Net contracted value (6-yr)",    c:"#f59e0b"},
+              ].map(({v,l,c})=>(
+                <div key={l}>
+                  <div style={{fontSize:24,fontWeight:900,color:c,lineHeight:1}}>{v}</div>
+                  <div style={{fontSize:11,color:"var(--text2)",marginTop:4}}>{l}</div>
                 </div>
               ))}
             </div>
@@ -575,44 +564,42 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
         </div>
       </div>
 
-      {/* Market funnel */}
+      {/* ── MARKET FUNNEL ── */}
       <div style={{...C.card(),marginBottom:20}}>
-        <div style={C.cardHead()}><span style={C.cardTitle()}>Market Opportunity Funnel — TAM → SAM → SOM → Near-Term Pipeline</span></div>
-        <div style={{padding:'20px'}}>
-          <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.7,marginBottom:24,maxWidth:800}}>
-            Autonomi&apos;s addressable market is segmented by hospital scale, logistics complexity, and procurement maturity. 
-            The funnel narrows from the full acute care universe to the premium tier where autonomous delivery generates 
-            the strongest ROI case and the shortest path to a signed contract.
-          </p>
-          <div style={{display:'flex',flexDirection:'column' as const,gap:12}}>
-            {MARKET_TIERS.map((tier,i)=>{
-              const pct = Math.max(12, (tier.deployments / MARKET_TIERS[0].deployments) * 100)
+        <div style={C.cardHead()}><span style={C.cardTitle()}>Market Opportunity — TAM / SAM / SOM</span><span style={{fontSize:11,color:"var(--text3)"}}>Revenue figures from Autonomi Seed Investment Document</span></div>
+        <div style={{padding:"20px"}}>
+          <div style={{display:"flex",flexDirection:"column" as const,gap:12}}>
+            {MARKET_TIERS.map((tier)=>{
+              const widthPct = Math.max(15, (tier.revenue_b / 34.46) * 100)
+              const robotRevNetARR = tier.total_robots * REVENUE_MODEL.net_per_robot_year
               return (
-                <div key={tier.tier} style={{background:'var(--surface2)',border:`1px solid ${tier.color}33`,borderRadius:12,padding:'20px 24px',position:'relative' as const,overflow:'hidden'}}>
-                  <div style={{position:'absolute' as const,left:0,top:0,bottom:0,width:`${pct}%`,background:`${tier.color}08`,transition:'width 0.8s ease'}}/>
-                  <div style={{position:'relative' as const,zIndex:1}}>
-                    <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',flexWrap:'wrap' as const,gap:12,marginBottom:10}}>
-                      <div>
-                        <div style={{display:'flex',alignItems:'center',gap:10,marginBottom:4}}>
-                          <span style={{fontSize:12,fontWeight:800,color:tier.color,background:`${tier.color}15`,padding:'2px 10px',borderRadius:999,border:`1px solid ${tier.color}33`}}>{tier.tier}</span>
-                          <span style={{fontSize:15,fontWeight:800,color:'var(--text)'}}>{tier.label}</span>
+                <div key={tier.tier} style={{background:"var(--surface2)",border:`1px solid ${tier.color}33`,borderRadius:12,padding:"20px 24px",position:"relative" as const,overflow:"hidden"}}>
+                  <div style={{position:"absolute" as const,left:0,top:0,bottom:0,width:`${widthPct}%`,background:`${tier.color}08`}}/>
+                  <div style={{position:"relative" as const,zIndex:1}}>
+                    <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",flexWrap:"wrap" as const,gap:12,marginBottom:8}}>
+                      <div style={{flex:1,minWidth:0}}>
+                        <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:6}}>
+                          <span style={{fontSize:12,fontWeight:800,color:tier.color,background:`${tier.color}15`,padding:"2px 10px",borderRadius:999,border:`1px solid ${tier.color}33`,flexShrink:0}}>{tier.tier}</span>
+                          <span style={{fontSize:15,fontWeight:800,color:"var(--text)"}}>{tier.label}</span>
                         </div>
-                        <p style={{fontSize:13,color:'var(--text2)',margin:0,lineHeight:1.6,maxWidth:640}}>{tier.description}</p>
+                        <p style={{fontSize:13,color:"var(--text2)",margin:0,lineHeight:1.6,maxWidth:580}}>{tier.description}</p>
+                        <div style={{fontSize:10,color:"var(--text3)",marginTop:6,fontStyle:"italic" as const}}>Source: {tier.source}</div>
                       </div>
-                      <div style={{display:'flex',gap:24,flexShrink:0}}>
-                        {[
-                          {v:tier.hospitals.toLocaleString(), l:'Hospitals', c:'var(--text)'},
-                          {v:tier.deployments.toLocaleString(), l:'Deployments', c:tier.color},
-                          {v:tier.total_robots.toLocaleString(), l:'Total Robots', c:'var(--purple)'},
-                        ].map(({v,l,c})=>(
-                          <div key={l} style={{textAlign:'center' as const}}>
-                            <div style={{fontSize:20,fontWeight:900,color:c,lineHeight:1}}>{v}</div>
-                            <div style={{fontSize:10,color:'var(--text3)',marginTop:3,textTransform:'uppercase' as const,letterSpacing:'0.05em'}}>{l}</div>
-                          </div>
-                        ))}
+                      <div style={{display:"flex",gap:20,flexShrink:0,flexWrap:"wrap" as const}}>
+                        <div style={{textAlign:"center" as const}}>
+                          <div style={{fontSize:20,fontWeight:900,color:tier.color,lineHeight:1}}>{tier.revenue_label}</div>
+                          <div style={{fontSize:10,color:"var(--text3)",marginTop:3,textTransform:"uppercase" as const,letterSpacing:"0.05em",maxWidth:120}}>{tier.revenue_basis}</div>
+                        </div>
+                        <div style={{textAlign:"center" as const}}>
+                          <div style={{fontSize:20,fontWeight:900,color:"#8b5cf6",lineHeight:1}}>{tier.total_robots.toLocaleString()}</div>
+                          <div style={{fontSize:10,color:"var(--text3)",marginTop:3,textTransform:"uppercase" as const,letterSpacing:"0.05em"}}>Robot units</div>
+                        </div>
+                        <div style={{textAlign:"center" as const}}>
+                          <div style={{fontSize:20,fontWeight:900,color:"#10b981",lineHeight:1}}>{tier.deployments.toLocaleString()}</div>
+                          <div style={{fontSize:10,color:"var(--text3)",marginTop:3,textTransform:"uppercase" as const,letterSpacing:"0.05em"}}>Deployments</div>
+                        </div>
                       </div>
                     </div>
-                    <div style={{fontSize:10,color:'var(--text3)',fontStyle:'italic' as const}}>Source: {tier.source}</div>
                   </div>
                 </div>
               )
@@ -621,60 +608,172 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
         </div>
       </div>
 
-      {/* 5-7 year target rationale */}
+      {/* ── ROBOT FORMULA ── */}
       <div style={{...C.card(),marginBottom:20}}>
-        <div style={C.cardHead()}><span style={C.cardTitle()}>5–7 Year Commercial Target — Rationale & Assumptions</span></div>
-        <div style={{padding:'20px'}}>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',gap:16,marginBottom:24}}>
-            {[
-              {icon:'🏥', title:'120 Deployments', sub:'34 profiled hospital campuses', body:'The near-term pipeline reflects Autonomi&apos;s primary commercial focus through 2030–2032: the 34 largest and most operationally complex US hospital campuses. These facilities were individually profiled for campus structure, yielding 120 separate fleet deployments across multi-building and multi-site layouts.', color:'#f59e0b'},
-              {icon:'🤖', title:'6,313 Robots', sub:'Conservative fleet estimate', body:'At 0.056 robots per bed applied across the profiled campuses — and accounting for multi-building deployment multipliers — the near-term target represents approximately 6,313 autonomous units across pharmacy, labs, food, and EVS workflows.', color:'#8b5cf6'},
-              {icon:'📅', title:'2025–2032', sub:'7-year commercial ramp', body:'Hospital procurement cycles for autonomous infrastructure average 12–24 months from first engagement to contract. At 15–20 deployments per year at scale — achievable by year 3 — 120 total deployments is attainable by 2031–2032 without requiring market penetration beyond the top 34 campuses.', color:'#3b82f6'},
-              {icon:'📊', title:'33% of 500+ Tier', sub:'of the premium SOM', body:'The 120-deployment target represents approximately 33% penetration of the 500+ bed hospital segment — a credible and defensible market capture rate for an established robotics platform with a proven ROI case and reference customers at flagship academic medical centers.', color:'#10b981'},
-            ].map(({icon,title,sub,body,color})=>(
-              <div key={title} style={{background:'var(--surface2)',border:`1px solid ${color}22`,borderRadius:10,padding:'16px 18px'}}>
-                <div style={{fontSize:24,marginBottom:10}}>{icon}</div>
-                <div style={{fontSize:16,fontWeight:800,color:'var(--text)',marginBottom:2}}>{title}</div>
-                <div style={{fontSize:11,color:color,fontWeight:700,marginBottom:10,textTransform:'uppercase' as const,letterSpacing:'0.05em'}}>{sub}</div>
-                <p style={{fontSize:13,color:'var(--text2)',lineHeight:1.7,margin:0}}>{body}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* What size hospitals */}
-          <div style={{background:'rgba(59,130,246,0.06)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:10,padding:'18px 20px'}}>
-            <div style={{fontSize:13,fontWeight:700,color:'var(--accent2)',marginBottom:12}}>Target Hospital Profile — Where Autonomi Focuses</div>
-            <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:12}}>
-              {[
-                {range:'100–199 beds', robots:'5–11', verdict:'⚠️ Borderline', detail:'ROI case is thin as a standalone deployment. Viable only as part of an IDN system-wide contract where fixed integration costs are amortised across multiple sites.', color:'#6366f1'},
-                {range:'200–299 beds', robots:'11–17', verdict:'🟡 Emerging', detail:'Minimum viable as standalone if the hospital is high-acuity or part of a large IDN. Pharmacy and EVS use cases lead. 500+ hospitals in this tier.', color:'#eab308'},
-                {range:'300–499 beds', robots:'17–28', verdict:'✅ Core SAM', detail:'Primary target for initial commercial expansion. Strong pharmacy throughput, meaningful lab volume, and sufficient EVS demand to build a compelling ROI case at the hospital executive level.', color:'#10b981'},
-                {range:'500–799 beds', robots:'28–45', verdict:'🎯 Prime Target', detail:'Ideal deployment profile. Complexity justifies autonomous infrastructure. Procurement authority sits at hospital or system C-suite level. Budget cycles support multi-year infrastructure contracts.', color:'#3b82f6'},
-                {range:'800–1,499 beds', robots:'45–84', verdict:'🏆 Premium Tier', detail:'Flagship academic medical centers and regional hubs. Multi-building campuses mean 2–4 fleet deployments per institution. Highest robot count, longest sales cycle, strongest reference value.', color:'#f97316'},
-                {range:'1,500+ beds', robots:'84–168+', verdict:'⭐ Landmark', detail:'Only ~10 facilities at this scale in the US. NYP Weill Cornell, AdventHealth Orlando, Montefiore Moses. Each represents 100–700 robots and multiple deployments. Trophy reference customers.', color:'#ef4444'},
-              ].map(({range,robots,verdict,detail,color})=>(
-                <div key={range} style={{background:'var(--surface)',border:`1px solid ${color}33`,borderRadius:8,padding:'12px 14px'}}>
-                  <div style={{fontSize:12,fontWeight:800,color:color}}>{range}</div>
-                  <div style={{fontSize:11,color:'var(--text3)',marginTop:2,marginBottom:6}}>{robots} robots · {verdict}</div>
-                  <p style={{fontSize:12,color:'var(--text2)',margin:0,lineHeight:1.6}}>{detail}</p>
+        <div style={C.cardHead()}>
+          <span style={C.cardTitle()}>Robot Density Formula — Derived from Live Deployment Data</span>
+          <span style={{fontSize:11,background:"rgba(139,92,246,0.1)",padding:"2px 10px",borderRadius:999,border:"1px solid rgba(139,92,246,0.2)",fontWeight:700,color:"#8b5cf6"}}>–20% Conservative Factor Applied</span>
+        </div>
+        <div style={{padding:"20px"}}>
+          <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.7,marginBottom:20,maxWidth:800}}>
+            A 600-bed hospital moves 37,000 items and 90,000 lbs daily — mostly by foot. 
+            Autonomi&apos;s robot density formula is calibrated from actual throughput data across operating deployments 
+            and reduced by 20% for conservatism. The result — <strong style={{color:"var(--text)"}}>0.056 robots per staffed bed</strong> — 
+            is applied per hospital. Multi-building campuses split this fleet across deployment units; 
+            the total robot count does not increase with deployment count.
+          </p>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginBottom:20}}>
+            {(Object.entries(ROBOT_FORMULA) as [string,{ratio:number;label:string;description:string}][]).map(([key,f])=>{
+              const colours:{[k:string]:string}={pharmacy_patient:"#3b82f6",pharmacy_restock:"#6366f1",labs:"#10b981",food:"#f59e0b",evs:"#ef4444"}
+              const c=colours[key]||"#8b5cf6"
+              return (
+                <div key={key} style={{background:"var(--surface2)",border:`1px solid ${c}33`,borderRadius:10,padding:"14px 16px"}}>
+                  <div style={{fontSize:10,fontWeight:700,color:c,letterSpacing:"0.05em",marginBottom:6,textTransform:"uppercase" as const}}>{f.label}</div>
+                  <div style={{fontSize:22,fontWeight:900,color:"var(--text)",lineHeight:1}}>{f.ratio.toFixed(3)}<span style={{fontSize:12,color:"var(--text3)",marginLeft:4}}>per bed</span></div>
+                  <div style={{fontSize:11,color:"var(--text2)",marginTop:6,lineHeight:1.4}}>{f.description}</div>
                 </div>
-              ))}
+              )
+            })}
+            <div style={{background:"var(--surface2)",border:"1px solid rgba(139,92,246,0.4)",borderRadius:10,padding:"14px 16px",display:"flex",flexDirection:"column" as const,justifyContent:"center"}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#8b5cf6",letterSpacing:"0.05em",marginBottom:6,textTransform:"uppercase" as const}}>Total Combined</div>
+              <div style={{fontSize:28,fontWeight:900,color:"#8b5cf6",lineHeight:1}}>0.056<span style={{fontSize:12,color:"var(--text3)",marginLeft:4}}>per bed</span></div>
+              <div style={{fontSize:11,color:"var(--text2)",marginTop:6}}>= 1 robot per 17.9 beds</div>
+              <div style={{fontSize:11,color:"var(--text2)"}}>600-bed hospital → 34 robots</div>
+            </div>
+          </div>
+          <div style={{...C.card(),padding:0,overflow:"hidden"}}>
+            <div style={{padding:"12px 16px 4px",borderBottom:"1px solid var(--border)"}}><span style={C.cardTitle()}>Robot Count by Hospital Size — Stacked by Use Case</span></div>
+            <div style={{padding:"16px 12px 8px"}}>
+              <ResponsiveContainer width="100%" height={200}>
+                <BarChart data={bedRobotData} margin={{top:4,right:8,bottom:0,left:-10}}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false}/>
+                  <XAxis dataKey="label" tick={{fontSize:10,fill:"var(--text2)"}} axisLine={false} tickLine={false}/>
+                  <YAxis tick={{fontSize:10,fill:"var(--text3)"}} axisLine={false} tickLine={false}/>
+                  <Tooltip contentStyle={{background:"var(--surface2)",border:"1px solid var(--border)",borderRadius:8,fontSize:12}} labelStyle={{color:"var(--text2)"}} itemStyle={{color:"var(--text)"}}/>
+                  <Bar dataKey="pharmacy" name="Pharmacy" stackId="a" fill="#3b82f6"/>
+                  <Bar dataKey="labs"     name="Labs"     stackId="a" fill="#10b981"/>
+                  <Bar dataKey="food"     name="Food"     stackId="a" fill="#f59e0b"/>
+                  <Bar dataKey="evs"      name="EVS"      stackId="a" fill="#ef4444" radius={[4,4,0,0]}/>
+                </BarChart>
+              </ResponsiveContainer>
+              <div style={{display:"flex",gap:16,marginTop:8,flexWrap:"wrap" as const}}>
+                {[["#3b82f6","Pharmacy"],["#10b981","Labs"],["#f59e0b","Food & Nutrition"],["#ef4444","EVS"]].map(([c,l])=>(
+                  <div key={l} style={{display:"flex",alignItems:"center",gap:6,fontSize:11,color:"var(--text2)"}}>
+                    <div style={{width:10,height:10,borderRadius:2,background:c,flexShrink:0}}/>
+                    {l}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Key Assumptions */}
+      {/* ── 34 HOSPITAL BREAKDOWN ── */}
+      <div style={{...C.card(),marginBottom:20}}>
+        <div style={C.cardHead()}>
+          <span style={C.cardTitle()}>Near-Term Pipeline — 34 Profiled Hospital Campuses</span>
+          <span style={{fontSize:11,color:"var(--text3)"}}>
+            {NEAR_TERM.total_robots.toLocaleString()} robots · {NEAR_TERM.deployments} deployments · avg {NEAR_TERM.robots_per_dep} robots/deployment · avg {NEAR_TERM.robots_per_hosp} robots/hospital
+          </span>
+        </div>
+        <div style={{padding:"16px 20px 12px"}}>
+          <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:16,maxWidth:800}}>
+            Each hospital was individually profiled for campus structure. Multi-building campuses generate multiple deployment units
+            but the same total robot count — the fleet is divided across buildings, not multiplied.
+            At $2,500/robot/month gross, this pipeline represents{" "}
+            <strong style={{color:"var(--text)"}}>${(NEAR_TERM.gross_mrr/1000000).toFixed(1)}M gross MRR</strong> and{" "}
+            <strong style={{color:"var(--text)"}}>${(NEAR_TERM.net_arr/1000000).toFixed(1)}M net ARR</strong> at full deployment.
+          </p>
+        </div>
+        <div style={{overflowX:"auto" as const}}>
+          <table style={{width:"100%",borderCollapse:"collapse" as const,fontSize:12}}>
+            <thead>
+              <tr>
+                {["#","Hospital","Beds","Total Robots","Deploy Units","Robots/Unit","Pharmacy","Labs","Food","EVS","Net ARR"].map(h=>(
+                  <th key={h} style={{...C.th(),whiteSpace:"nowrap" as const}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {PROFILED_HOSPITALS.map((h,i)=>{
+                const r=calcRobots(h.beds)
+                const perDep=Math.round(r.total/h.deployments)
+                const netARR=r.total*REVENUE_MODEL.net_per_robot_year
+                const c=r.total>=100?"#ef4444":r.total>=60?"#f97316":r.total>=40?"#eab308":"#10b981"
+                return (
+                  <tr key={h.name} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                    <td style={{...C.td(),color:"var(--text3)",fontFamily:"monospace",fontSize:11}}>{i+1}</td>
+                    <td style={{...C.td(),fontWeight:600,color:"var(--text)"}}>{h.name}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",color:"var(--text2)"}}>{h.beds.toLocaleString()}</td>
+                    <td style={{...C.td()}}><span style={{fontFamily:"monospace",fontWeight:800,fontSize:13,color:c}}>{r.total}</span></td>
+                    <td style={{...C.td(),textAlign:"center" as const}}>
+                      <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:24,height:24,borderRadius:"50%",background:"rgba(139,92,246,0.15)",border:"1px solid rgba(139,92,246,0.3)",fontSize:11,fontWeight:800,color:"#8b5cf6"}}>{h.deployments}</span>
+                    </td>
+                    <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)",textAlign:"center" as const}}>{perDep}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#3b82f6"}}>{r.pharmacy_patient+r.pharmacy_restock}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#10b981"}}>{r.labs}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#f59e0b"}}>{r.food}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#ef4444"}}>{r.evs}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#10b981",fontWeight:700}}>${(netARR/1000).toFixed(0)}K</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+            <tfoot>
+              <tr style={{background:"var(--surface2)",fontWeight:700}}>
+                <td style={C.td()}/>
+                <td style={{...C.td(),fontWeight:800,color:"var(--text)"}}>TOTALS</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"var(--text2)"}}>{NEAR_TERM.total_beds.toLocaleString()}</td>
+                <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#f59e0b",fontSize:14}}>{NEAR_TERM.total_robots.toLocaleString()}</td>
+                <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",color:"#8b5cf6",fontWeight:800}}>{NEAR_TERM.deployments}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)",textAlign:"center" as const}}>{NEAR_TERM.robots_per_dep}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6"}}>{PROFILED_HOSPITALS.reduce((a,h)=>{const r=calcRobots(h.beds);return a+r.pharmacy_patient+r.pharmacy_restock},0)}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#10b981"}}>{PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).labs,0)}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#f59e0b"}}>{PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).food,0)}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#ef4444"}}>{PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).evs,0)}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#10b981",fontWeight:800}}>${(NEAR_TERM.net_arr/1000000).toFixed(1)}M</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      {/* ── HOSPITAL SIZE TARGETS ── */}
+      <div style={{...C.card(),marginBottom:20}}>
+        <div style={C.cardHead()}><span style={C.cardTitle()}>Target Hospital Profile — ROI Viability by Bed Size</span></div>
+        <div style={{padding:"20px"}}>
+          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
+            {[
+              {range:"100–199 beds", robots:"6–11",  verdict:"⚠️ Borderline",   netArr:"$27–50K",  detail:"Thin standalone ROI. Viable through IDN system-wide contracts where fixed integration costs are shared across multiple sites.",                                                    c:"#6366f1"},
+              {range:"200–299 beds", robots:"11–17", verdict:"🟡 Emerging",     netArr:"$50–77K",  detail:"Minimum viable standalone if high-acuity or part of a large IDN. Pharmacy and EVS use cases lead. ~500 hospitals in this tier.",                                               c:"#eab308"},
+              {range:"300–499 beds", robots:"17–28", verdict:"✅ Core SAM",     netArr:"$77–126K", detail:"Primary expansion target. Strong pharmacy throughput, meaningful lab volume, EVS demand. Compelling ROI at hospital executive level. ~380 hospitals.",                         c:"#10b981"},
+              {range:"500–799 beds", robots:"28–45", verdict:"🎯 Prime Target", netArr:"$126–202K","detail":"Ideal deployment profile. Procurement at C-suite level. Multi-year infrastructure budgets. Complexity justifies full automation. ~190 hospitals.",                           c:"#3b82f6"},
+              {range:"800–1,499 beds",robots:"45–84",verdict:"🏆 Premium Tier", netArr:"$202–378K","detail":"Flagship academic medical centers. Multi-building campuses = 2–4 fleet deployments per institution. Highest robot count, strongest reference value. ~65 hospitals.",        c:"#f97316"},
+              {range:"1,500+ beds",  robots:"84–168+",verdict:"⭐ Landmark",    netArr:"$378K–$756K+","detail":"~10 facilities in the US. NYP Weill Cornell (184 robots, 4 deployments), AdventHealth Orlando (166 robots, 4 deployments). Trophy reference customers.",              c:"#ef4444"},
+            ].map(({range,robots,verdict,netArr,detail,c})=>(
+              <div key={range} style={{background:"var(--surface2)",border:`1px solid ${c}33`,borderRadius:10,padding:"14px 16px"}}>
+                <div style={{fontSize:13,fontWeight:800,color:c}}>{range}</div>
+                <div style={{fontSize:11,color:"var(--text3)",marginTop:2,marginBottom:2}}>{robots} robots · {verdict}</div>
+                <div style={{fontSize:12,fontWeight:700,color:"#10b981",marginBottom:8}}>{netArr} net ARR/yr</div>
+                <p style={{fontSize:12,color:"var(--text2)",margin:0,lineHeight:1.6}}>{detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ── ASSUMPTIONS ── */}
       <div style={{...C.card(),marginBottom:20}}>
         <div style={C.cardHead()}><span style={C.cardTitle()}>Methodology & Key Assumptions</span></div>
-        <div style={{padding:'20px'}}>
-          <div style={{display:'flex',flexDirection:'column' as const,gap:16}}>
+        <div style={{padding:"20px"}}>
+          <div style={{display:"flex",flexDirection:"column" as const,gap:16}}>
             {KEY_ASSUMPTIONS.map((a,i)=>(
-              <div key={i} style={{display:'flex',gap:16,paddingBottom:16,borderBottom:i<KEY_ASSUMPTIONS.length-1?'1px solid var(--border)':'none'}}>
-                <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(59,130,246,0.15)',border:'1px solid rgba(59,130,246,0.3)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:12,fontWeight:800,color:'var(--accent2)',flexShrink:0}}>{i+1}</div>
+              <div key={i} style={{display:"flex",gap:14,paddingBottom:16,borderBottom:i<KEY_ASSUMPTIONS.length-1?"1px solid var(--border)":"none"}}>
+                <div style={{width:26,height:26,borderRadius:"50%",background:"rgba(59,130,246,0.15)",border:"1px solid rgba(59,130,246,0.3)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,fontWeight:800,color:"var(--accent2)",flexShrink:0}}>{i+1}</div>
                 <div>
-                  <div style={{fontSize:14,fontWeight:700,color:'var(--text)',marginBottom:6}}>{a.title}</div>
-                  <p style={{fontSize:13,color:'var(--text2)',margin:0,lineHeight:1.7}}>{a.body}</p>
+                  <div style={{fontSize:13,fontWeight:700,color:"var(--text)",marginBottom:5}}>{a.title}</div>
+                  <p style={{fontSize:13,color:"var(--text2)",margin:0,lineHeight:1.7}}>{a.body}</p>
                 </div>
               </div>
             ))}
@@ -682,14 +781,13 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
         </div>
       </div>
 
-      {/* Disclaimer */}
-      <div style={{background:'rgba(245,158,11,0.06)',border:'1px solid rgba(245,158,11,0.2)',borderRadius:10,padding:'14px 18px',marginBottom:20}}>
-        <div style={{fontSize:11,fontWeight:700,color:'#f59e0b',marginBottom:6,letterSpacing:'0.05em'}}>CONFIDENTIAL — FORWARD-LOOKING STATEMENTS</div>
-        <p style={{fontSize:12,color:'var(--text2)',margin:0,lineHeight:1.7}}>
-          This analysis contains forward-looking estimates based on Autonomi&apos;s operational deployment data, third-party hospital databases, and publicly available industry research. 
-          Robot density ratios are derived from live deployments and reduced by 20% for conservatism. Market size figures are estimates subject to revision. 
-          Hospital bed counts sourced from AHA Annual Survey 2026, Definitive Health HospitalView (August 2025), American Hospital Directory (Medicare Cost Reports), and Becker&apos;s Hospital Review (February 2026). 
-          This document is intended for authorised investors and partners only. Do not distribute.
+      {/* ── DISCLAIMER ── */}
+      <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,padding:"14px 18px",marginBottom:20}}>
+        <div style={{fontSize:10,fontWeight:700,color:"#f59e0b",marginBottom:6,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>Confidential — Forward-Looking Statements</div>
+        <p style={{fontSize:12,color:"var(--text2)",margin:0,lineHeight:1.7}}>
+          Revenue figures (TAM $34.46B, SAM $8.6B, SOM $647M) and unit economics ($2,500/robot/month, 6-year RaaS) sourced from the Autonomi/Ctrl Seed Investment Document.
+          Robot density ratios derived from live deployments, reduced 20% for conservatism. Hospital counts from AHA Annual Survey 2024 and Definitive Health HospitalView August 2025.
+          Forward-looking statements involve risks and uncertainties. This document is for authorised investors and partners only. Do not distribute.
         </p>
       </div>
     </div>
