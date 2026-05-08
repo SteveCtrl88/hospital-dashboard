@@ -468,13 +468,13 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
   const above300   = withBeds.filter(h=>(h.beds??0)>=300).length
 
   // Revenue calculations — 60% net margin, $10k capex per robot
-  const nearRobots       = NEAR_TERM.total_robots
-  const nearGrossMRR     = NEAR_TERM.gross_mrr
-  const nearNetMRR       = NEAR_TERM.net_mrr
-  const nearNetARR       = NEAR_TERM.net_arr
-  const nearCapex        = NEAR_TERM.capex_required
-  const nearContractVal  = NEAR_TERM.net_contract_val
-  const nearTrueProfit   = NEAR_TERM.true_profit
+  const nearRobots       = RAMP_TOTAL.robots
+  const nearGrossMRR     = RAMP_TOTAL.grossMRR
+  const nearNetMRR       = RAMP_TOTAL.netMRR
+  const nearNetARR       = RAMP_TOTAL.netARR
+  const nearCapex        = RAMP_TOTAL.capex
+  const nearContractVal  = RAMP_TOTAL.contractVal
+  const nearTrueProfit   = RAMP_TOTAL.trueProfit
   const somRobots        = MARKET_TIERS.find(t=>t.tier==='SOM')!.total_robots
   const somNetARR        = somRobots * REVENUE_MODEL.net_per_robot_year
 
@@ -529,7 +529,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             AI orchestration, and support. Contracts run 6 years with optional upgrade paths, providing strong recurring
             revenue visibility and customer lock-in. Average monthly gross revenue per deployed robot is{" "}
             <strong style={{color:"var(--text)"}}>$2,500</strong>, yielding{" "}
-            <strong style={{color:"var(--text)"}}>$375 net per robot per month</strong> (15% net after 59% ops/maintenance and 26% commissions).
+            <strong style={{color:"var(--text)"}}>$1,500 net per robot per month</strong> (60% net after 40% external servicing, insurance &amp; ops).
           </p>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,marginBottom:24}}>
             {[
@@ -767,7 +767,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
         <div style={C.cardHead()}>
           <span style={C.cardTitle()}>Near-Term Pipeline — 34 Profiled Hospital Campuses</span>
           <span style={{fontSize:11,color:"var(--text3)"}}>
-            {NEAR_TERM.total_robots.toLocaleString()} robots · {NEAR_TERM.deployments} deployments · avg {NEAR_TERM.robots_per_dep} robots/deployment · avg {NEAR_TERM.robots_per_hosp} robots/hospital
+            {NEAR_TERM.total_robots.toLocaleString()} profiled robots · {NEAR_TERM.deployments} deployments · avg {NEAR_TERM.robots_per_dep} per deployment · $18K net ARR per robot · 2032 ramp target: {RAMP_TOTAL.robots.toLocaleString()} robots
           </span>
         </div>
         <div style={{padding:"16px 20px 12px"}}>
@@ -775,8 +775,8 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             Each hospital was individually profiled for campus structure. Multi-building campuses generate multiple deployment units
             but the same total robot count — the fleet is divided across buildings, not multiplied.
             At $2,500/robot/month gross, this pipeline represents{" "}
-            <strong style={{color:"var(--text)"}}>${(NEAR_TERM.gross_mrr/1000000).toFixed(1)}M gross MRR</strong> and{" "}
-            <strong style={{color:"var(--text)"}}>${(NEAR_TERM.net_arr/1000000).toFixed(1)}M net ARR</strong> at full deployment.
+            <strong style={{color:"var(--text)"}}>${(RAMP_TOTAL.grossMRR/1000000).toFixed(2)}M gross MRR</strong> and{" "}
+            <strong style={{color:"var(--text)"}}>${(RAMP_TOTAL.netARR/1000000).toFixed(1)}M net ARR</strong> at 2032 run-rate (2,952 robots across 7-year ramp).
           </p>
         </div>
         <div style={{overflowX:"auto" as const}}>
