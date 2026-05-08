@@ -207,8 +207,8 @@ export const DEPLOYMENT_RAMP = [
   { year: 3, label: "2028", phase: "Early Scale", newRobots: 300, description: "3–4 new hospital system contracts. Reference customers driving inbound pipeline growth." },
   { year: 4, label: "2029", phase: "Growth",      newRobots: 450, description: "Procurement cycle shortens with established references. 6–8 new contracts per year." },
   { year: 5, label: "2030", phase: "Growth",      newRobots: 550, description: "SAM penetration deepening. IDN-wide rollouts across multi-site hospital networks." },
-  { year: 6, label: "2031", phase: "Scale",       newRobots: 300, description: "20% fleet growth rate on 2030 base (1,500 × 20%). Premium tier 800+ bed hospitals entering." },
-  { year: 7, label: "2032", phase: "Scale",       newRobots: 360, description: "20% fleet growth rate on 2031 base (1,800 × 20%). Approaching full 34-campus pipeline capacity." },
+  { year: 6, label: "2031", phase: "Scale (+20%)", newRobots: 660, description: "20% YoY growth on 2030 baseline (550 × 1.20). Premium tier 800+ bed hospitals entering." },
+  { year: 7, label: "2032", phase: "Scale (+20%)", newRobots: 792, description: "20% YoY growth on 2031 baseline (660 × 1.20). SAM penetration expanding beyond initial 34-campus pipeline." },
 ].map((y, i, arr) => {
   const cumulative = arr.slice(0, i + 1).reduce((a, r) => a + r.newRobots, 0)
   return {
