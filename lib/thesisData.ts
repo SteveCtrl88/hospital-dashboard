@@ -35,11 +35,11 @@ export const REVENUE_MODEL = {
 }
 
 export const ROBOT_FORMULA = {
-  pharmacy_patient: { ratio: 0.008, label: 'Pharmacy — Patient-specific meds', description: '1 robot per 100 beds (–20% conservative)' },
-  pharmacy_restock: { ratio: 0.008, label: 'Pharmacy — Restock runs',           description: '1 robot per 100 beds (–20% conservative)' },
-  labs:             { ratio: 0.004, label: 'Laboratory specimen transport',      description: '1 robot per 200 beds (–20% conservative)' },
-  food:             { ratio: 0.012, label: 'Food & nutrition delivery',          description: '1.5 robots per 100 beds (–20% conservative)' },
-  evs:              { ratio: 0.024, label: 'Environmental Services (EVS)',       description: '3 robots per 100 beds (–20% conservative)' },
+  pharmacy_patient: { ratio: 0.008, label: 'Pharmacy — Patient-specific meds', description: '1 robot per 125 beds', beds_per_robot: 125 },
+  pharmacy_restock: { ratio: 0.008, label: 'Pharmacy — Restock runs',           description: '1 robot per 125 beds', beds_per_robot: 125 },
+  labs:             { ratio: 0.004, label: 'Laboratory specimen transport',      description: '1 robot per 250 beds', beds_per_robot: 250 },
+  food:             { ratio: 0.012, label: 'Food & nutrition delivery',          description: '1 robot per 83 beds',  beds_per_robot: 83  },
+  evs:              { ratio: 0.024, label: 'Environmental Services (EVS)',       description: '1 robot per 42 beds',  beds_per_robot: 42  },
 }
 
 export const ROBOTS_PER_BED = 0.056
@@ -146,7 +146,7 @@ export const MARKET_TIERS = [
   {
     tier: 'SOM',
     label: 'Serviceable Obtainable Market',
-    description: 'Revenue potential within 5 years at 10% penetration of large hospitals — the 270 facilities with 500+ staffed beds where procurement authority sits at executive level and logistics automation has the highest ROI. At $2,500/robot/month gross and 15% net, the 10,584 robot opportunity generates significant recurring revenue.',
+    description: 'Revenue potential within 5 years at 10% penetration of large hospitals — the 270 facilities with 500+ staffed beds where procurement authority sits at executive level, capital budgets support multi-year infrastructure contracts, and logistics complexity is highest. At $1,500 net/robot/month (60% net margin), 10,584 robots generates $190M net ARR for Autonomi.',
     hospitals: 270,
     total_beds: 189000,
     deployments: 364,

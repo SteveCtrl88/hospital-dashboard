@@ -804,10 +804,10 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                       <span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",width:24,height:24,borderRadius:"50%",background:"rgba(139,92,246,0.15)",border:"1px solid rgba(139,92,246,0.3)",fontSize:11,fontWeight:800,color:"#8b5cf6"}}>{h.deployments}</span>
                     </td>
                     <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)",textAlign:"center" as const}}>{perDep}</td>
-                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#3b82f6"}}>{r.pharmacy_patient+r.pharmacy_restock}</td>
-                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#10b981"}}>{r.labs}</td>
-                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#f59e0b"}}>{r.food}</td>
-                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#ef4444"}}>{r.evs}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#3b82f6"}}>{Math.round(r.pharmacy_patient+r.pharmacy_restock)}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#10b981"}}>{Math.round(r.labs)}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#f59e0b"}}>{Math.round(r.food)}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#ef4444"}}>{Math.round(r.evs)}</td>
                     <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"#10b981",fontWeight:700}}>${(netARR/1000).toFixed(0)}K</td>
                   </tr>
                 )
@@ -821,10 +821,10 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                 <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#f59e0b",fontSize:14}}>{NEAR_TERM.total_robots.toLocaleString()}</td>
                 <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",color:"#8b5cf6",fontWeight:800}}>{NEAR_TERM.deployments}</td>
                 <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)",textAlign:"center" as const}}>{NEAR_TERM.robots_per_dep}</td>
-                <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6"}}>{PROFILED_HOSPITALS.reduce((a,h)=>{const r=calcRobots(h.beds);return a+r.pharmacy_patient+r.pharmacy_restock},0)}</td>
-                <td style={{...C.td(),fontFamily:"monospace",color:"#10b981"}}>{PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).labs,0)}</td>
-                <td style={{...C.td(),fontFamily:"monospace",color:"#f59e0b"}}>{PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).food,0)}</td>
-                <td style={{...C.td(),fontFamily:"monospace",color:"#ef4444"}}>{PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).evs,0)}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6"}}>{Math.round(PROFILED_HOSPITALS.reduce((a,h)=>{const r=calcRobots(h.beds);return a+Math.round(r.pharmacy_patient+r.pharmacy_restock)},0))}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#10b981"}}>{Math.round(PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).labs,0))}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#f59e0b"}}>{Math.round(PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).food,0))}</td>
+                <td style={{...C.td(),fontFamily:"monospace",color:"#ef4444"}}>{Math.round(PROFILED_HOSPITALS.reduce((a,h)=>a+calcRobots(h.beds).evs,0))}</td>
                 <td style={{...C.td(),fontFamily:"monospace",color:"#10b981",fontWeight:800}}>${(NEAR_TERM.net_arr/1000000).toFixed(1)}M</td>
               </tr>
             </tfoot>
@@ -834,25 +834,40 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
 
       {/* ── HOSPITAL SIZE TARGETS ── */}
       <div style={{...C.card(),marginBottom:20}}>
-        <div style={C.cardHead()}><span style={C.cardTitle()}>Target Hospital Profile — ROI Viability by Bed Size</span></div>
-        <div style={{padding:"20px"}}>
-          <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}>
-            {[
-              {range:"100–199 beds", robots:"6–11",  verdict:"⚠️ Borderline",   capex:"$60–110K",  netArr:"$108–198K",    detail:"Thin standalone ROI. Capex recovered in 6.7 months per robot. Viable through IDN system-wide contracts where fixed costs are shared.",                          c:"#6366f1"},
-              {range:"200–299 beds", robots:"11–17", verdict:"🟡 Emerging",     capex:"$110–170K", netArr:"$198–306K",    detail:"Minimum viable standalone if high-acuity or IDN-affiliated. Pharmacy and EVS use cases lead. Capex recovery in under 7 months. ~500 hospitals.",            c:"#eab308"},
-              {range:"300–499 beds", robots:"17–28", verdict:"✅ Core SAM",     capex:"$170–280K", netArr:"$306–504K",    detail:"Primary expansion target. Strong pharmacy throughput, lab volume, EVS demand. $18K net ARR per robot with 9.8× capex return. ~380 hospitals.",            c:"#10b981"},
-              {range:"500–799 beds", robots:"28–45", verdict:"🎯 Prime Target", capex:"$280–450K", netArr:"$504K–810K",   detail:"Ideal deployment profile. C-suite procurement. $1.5M–$3M+ capex per site, recovered by month 7. Multi-year contracts with strong lock-in. ~190 hospitals.", c:"#3b82f6"},
-              {range:"800–1,499 beds",robots:"45–84",verdict:"🏆 Premium Tier", capex:"$450K–840K",netArr:"$810K–$1.5M",  detail:"Multi-building campuses = 2–4 deployments. Each robot delivers $98K true profit over 6 years. Trophy reference customers driving IDN-wide adoption. ~65 hospitals.", c:"#f97316"},
-              {range:"1,500+ beds",  robots:"84–168+",verdict:"⭐ Landmark",    capex:"$840K–$1.7M+",netArr:"$1.5M–$3M+","detail":"~10 US facilities. NYP (184 robots → $18M 6yr net contract), AdventHealth Orlando (166 robots → $16M). 9.8× return on capex per site.", c:"#ef4444"},
-            ].map(({range,robots,verdict,capex,netArr,detail,c})=>(
-              <div key={range} style={{background:"var(--surface2)",border:`1px solid ${c}33`,borderRadius:10,padding:"14px 16px"}}>
-                <div style={{fontSize:13,fontWeight:800,color:c}}>{range}</div>
-                <div style={{fontSize:11,color:"var(--text3)",marginTop:2,marginBottom:2}}>{robots} robots · {verdict}</div>
-                <div style={{fontSize:12,fontWeight:700,color:"#10b981",marginBottom:8}}>{netArr} net ARR/yr</div>
-                <p style={{fontSize:12,color:"var(--text2)",margin:0,lineHeight:1.6}}>{detail}</p>
-              </div>
-            ))}
-          </div>
+        <div style={C.cardHead()}><span style={C.cardTitle()}>Target Hospital Profile — ROI by Bed Size</span></div>
+        <div style={{overflowX:"auto" as const}}>
+          <table style={{width:"100%",borderCollapse:"collapse" as const,fontSize:12}}>
+            <thead>
+              <tr>
+                {["Bed Range","Est. Hospitals","Robots/Site","Capex/Site","Net ARR/Year","6yr Net Contract","Verdict","Notes"].map(h=>(
+                  <th key={h} style={{...C.th(),whiteSpace:"nowrap" as const}}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                {range:"100–199",  count:"~700",  robots:"6–11",   capex:"$60–110K",    arr:"$108–198K",    contract:"$648K–$1.2M",  verdict:"⚠️ Borderline",   c:"#6366f1", note:"Viable only via IDN system-wide deals. Fixed integration costs must be shared."},
+                {range:"200–299",  count:"~500",  robots:"11–17",  capex:"$110–170K",   arr:"$198–306K",    contract:"$1.2M–$1.8M",  verdict:"🟡 Emerging",     c:"#eab308", note:"Min. viable standalone if high-acuity or IDN-affiliated. 6.7 month capex recovery."},
+                {range:"300–499",  count:"~380",  robots:"17–28",  capex:"$170–280K",   arr:"$306–504K",    contract:"$1.8M–$3.0M",  verdict:"✅ Core SAM",     c:"#10b981", note:"Primary target. Strong ROI at exec level. 9.8× capex return. ~380 hospitals."},
+                {range:"500–799",  count:"~190",  robots:"28–45",  capex:"$280–450K",   arr:"$504K–$810K",  contract:"$3.0M–$4.9M",  verdict:"🎯 Prime Target", c:"#3b82f6", note:"C-suite procurement. Multi-year budgets. Recovered by month 7. Strong lock-in."},
+                {range:"800–1,499",count:"~65",   robots:"45–84",  capex:"$450K–840K",  arr:"$810K–$1.5M",  contract:"$4.9M–$9.1M",  verdict:"🏆 Premium",     c:"#f97316", note:"Multi-building = 2–4 fleet deployments. $98K true profit per robot over 6 years."},
+                {range:"1,500+",   count:"~10",   robots:"84–168+",capex:"$840K–$1.7M+",arr:"$1.5M–$3.0M+", contract:"$9.1M–$18M+",  verdict:"⭐ Landmark",    c:"#ef4444", note:"NYP: 184 robots → $18M 6yr net contract. AdventHealth Orlando: 166 robots → $16M."},
+              ].map(({range,count,robots,capex,arr,contract,verdict,c,note},i)=>(
+                <tr key={range} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
+                  <td style={{...C.td(),fontWeight:800,color:c,whiteSpace:"nowrap" as const}}>{range} beds</td>
+                  <td style={{...C.td(),textAlign:"center" as const,color:"var(--text2)"}}>{count}</td>
+                  <td style={{...C.td(),fontFamily:"monospace",fontWeight:700,color:c,textAlign:"center" as const}}>{robots}</td>
+                  <td style={{...C.td(),fontFamily:"monospace",color:"#f59e0b"}}>{capex}</td>
+                  <td style={{...C.td(),fontFamily:"monospace",fontWeight:700,color:"#10b981"}}>{arr}</td>
+                  <td style={{...C.td(),fontFamily:"monospace",color:"#6366f1"}}>{contract}</td>
+                  <td style={{...C.td(),whiteSpace:"nowrap" as const}}>
+                    <span style={{fontSize:11,fontWeight:700,color:c,background:c+"18",padding:"2px 7px",borderRadius:4,border:`1px solid ${c}33`}}>{verdict}</span>
+                  </td>
+                  <td style={{...C.td(),color:"var(--text2)",fontSize:11,maxWidth:240}}>{note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
 
