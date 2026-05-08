@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, CSSProperties, useCallback } from 'react'
 import { getDb, getFirebaseAuth } from '@/lib/firebase'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots, NEAR_TERM, PROFILED_HOSPITALS, ROBOTS_PER_BED, REVENUE_MODEL, DEPLOYMENT_RAMP } from '@/lib/thesisData'
+import { MARKET_TIERS, BED_SIZE_ROBOTS, KEY_ASSUMPTIONS, ROBOT_FORMULA, calcRobots, NEAR_TERM, PROFILED_HOSPITALS, ROBOTS_PER_BED, REVENUE_MODEL, DEPLOYMENT_RAMP, RAMP_TOTAL } from '@/lib/thesisData'
 import { useRouter } from 'next/navigation'
 import { ref, get } from 'firebase/database'
 import type { Hospital, IDNGroup, IDNHospital } from '@/lib/supabase'
@@ -552,16 +552,16 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
 
           {/* Near-term pipeline summary */}
           <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,padding:"16px 20px",marginBottom:16}}>
-            <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:12,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>Full Deployment Target — 34 Profiled Campuses</div>
+            <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:12,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>7-Year Deployment Target — End State (2032)</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16}}>
               {[
-                {v:nearRobots.toLocaleString(),                    l:"Total robots",                    c:"#8b5cf6"},
-                {v:`$${(nearCapex/1000000).toFixed(1)}M`,         l:"Total capex (Autonomi absorbs)",  c:"#f59e0b"},
-                {v:`$${(nearGrossMRR/1000000).toFixed(1)}M`,      l:"Gross MRR at full deployment",    c:"#3b82f6"},
-                {v:`$${(nearNetMRR/1000000).toFixed(1)}M`,        l:"Net MRR to Autonomi",             c:"#10b981"},
-                {v:`$${(nearNetARR/1000000).toFixed(1)}M`,        l:"Net ARR at full deployment",      c:"#10b981"},
-                {v:`$${(nearContractVal/1000000).toFixed(0)}M`,   l:"6yr net contract value",          c:"#6366f1"},
-                {v:`$${(nearTrueProfit/1000000).toFixed(0)}M`,    l:"True profit after capex",         c:"#ef4444"},
+                {v:RAMP_TOTAL.robots.toLocaleString(),                         l:"Total robots by 2032",            c:"#8b5cf6"},
+                {v:`$${(RAMP_TOTAL.capex/1000000).toFixed(1)}M`,              l:"Total capex (Autonomi absorbs)",  c:"#f59e0b"},
+                {v:`$${(RAMP_TOTAL.grossMRR/1000000).toFixed(2)}M`,           l:"Gross MRR at full deployment",    c:"#3b82f6"},
+                {v:`$${(RAMP_TOTAL.netMRR/1000000).toFixed(2)}M`,             l:"Net MRR to Autonomi (60%)",       c:"#10b981"},
+                {v:`$${(RAMP_TOTAL.netARR/1000000).toFixed(1)}M`,             l:"Net ARR run-rate",                c:"#10b981"},
+                {v:`$${(RAMP_TOTAL.contractVal/1000000).toFixed(0)}M`,        l:"6yr net contract value",          c:"#6366f1"},
+                {v:`$${(RAMP_TOTAL.trueProfit/1000000).toFixed(0)}M`,         l:"True profit after capex",         c:"#ef4444"},
               ].map(({v,l,c})=>(
                 <div key={l}>
                   <div style={{fontSize:22,fontWeight:900,color:c,lineHeight:1}}>{v}</div>
@@ -640,15 +640,15 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                 </tbody>
                 <tfoot>
                   <tr style={{background:"var(--surface2)",fontWeight:700}}>
-                    <td style={{...C.td(),fontWeight:800,color:"var(--text)"}}>End Yr 7</td>
+                    <td style={{...C.td(),fontWeight:800,color:"var(--text)"}}>End 2032</td>
                     <td style={C.td()}/>
-                    <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",color:"#f59e0b",fontWeight:800}}>{nearRobots.toLocaleString()}</td>
-                    <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",fontWeight:900,color:"#f59e0b"}}>{nearRobots.toLocaleString()}</td>
-                    <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6",fontWeight:700}}>${(nearGrossMRR/1000000).toFixed(1)}M</td>
-                    <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(nearNetMRR/1000000).toFixed(1)}M</td>
-                    <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(nearNetARR/1000000).toFixed(1)}M</td>
-                    <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)"}}>${(nearCapex/1000000).toFixed(1)}M</td>
-                    <td style={{...C.td(),fontSize:11,color:"var(--text2)"}}>Full 34-campus pipeline deployed</td>
+                    <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",color:"#f59e0b",fontWeight:800}}>{RAMP_TOTAL.robots.toLocaleString()}</td>
+                    <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",fontWeight:900,color:"#f59e0b"}}>{RAMP_TOTAL.robots.toLocaleString()}</td>
+                    <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6",fontWeight:700}}>${(RAMP_TOTAL.grossMRR/1000000).toFixed(2)}M</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(RAMP_TOTAL.netMRR/1000000).toFixed(2)}M</td>
+                    <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(RAMP_TOTAL.netARR/1000000).toFixed(1)}M</td>
+                    <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)"}}>${(RAMP_TOTAL.capex/1000000).toFixed(1)}M</td>
+                    <td style={{...C.td(),fontSize:11,color:"var(--text2)"}}>20% YoY growth from 2030 baseline</td>
                   </tr>
                 </tfoot>
               </table>

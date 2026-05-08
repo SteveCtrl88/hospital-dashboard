@@ -186,6 +186,18 @@ export const BED_SIZE_ROBOTS = [
 ]
 
 
+// Ramp totals — computed from DEPLOYMENT_RAMP schedule
+export const RAMP_TOTAL = {
+  robots:        2952,
+  deployments:   86,   // deployment unit count stays the same (same 34 campuses)
+  grossMRR:      2952 * 2500,
+  netMRR:        2952 * 1500,
+  netARR:        2952 * 18000,
+  capex:         2952 * 10000,
+  contractVal:   2952 * 108000,
+  trueProfit:    2952 * 98000,
+}
+
 // ── 7-Year Deployment Ramp ────────────────────────────────────────────────────
 // Year 1–2: Validation phase (max 200 robots — long sales cycle, biz case development)
 // Year 3–7: Scale phase (ramp to 2,345 total robots)
@@ -195,8 +207,8 @@ export const DEPLOYMENT_RAMP = [
   { year: 3, label: "2028", phase: "Early Scale", newRobots: 300, description: "3–4 new hospital system contracts. Reference customers driving inbound pipeline growth." },
   { year: 4, label: "2029", phase: "Growth",      newRobots: 450, description: "Procurement cycle shortens with established references. 6–8 new contracts per year." },
   { year: 5, label: "2030", phase: "Growth",      newRobots: 550, description: "SAM penetration deepening. IDN-wide rollouts across multi-site hospital networks." },
-  { year: 6, label: "2031", phase: "Scale",       newRobots: 500, description: "Premium tier (800+ bed) hospitals entering. Multi-building deployments dominating pipeline." },
-  { year: 7, label: "2032", phase: "Scale",       newRobots: 345, description: "34-campus pipeline complete. Transition to renewal cycle and broader SAM expansion." },
+  { year: 6, label: "2031", phase: "Scale",       newRobots: 300, description: "20% fleet growth rate on 2030 base (1,500 × 20%). Premium tier 800+ bed hospitals entering." },
+  { year: 7, label: "2032", phase: "Scale",       newRobots: 360, description: "20% fleet growth rate on 2031 base (1,800 × 20%). Approaching full 34-campus pipeline capacity." },
 ].map((y, i, arr) => {
   const cumulative = arr.slice(0, i + 1).reduce((a, r) => a + r.newRobots, 0)
   return {
