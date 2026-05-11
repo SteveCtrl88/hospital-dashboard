@@ -239,8 +239,8 @@ export const KEY_ASSUMPTIONS = [
     body: 'Robots are calculated once per hospital based on total staffed beds. Deployments represent separate autonomous fleet installs — a multi-building campus requires independent fleets per building (separate elevator banks, pharmacy locations, logistics zones), but the total robot count does not increase. A 1,000-bed hospital split across 3 buildings requires 56 robots total (~19 per building), not 56 × 3 = 168.',
   },
   {
-    title: '5–7 Year Commercial Target',
-    body: 'Hospital procurement cycles for autonomous infrastructure average 12–24 months. At 12–15 new deployments per year from 2026 onwards, 86 deployments across the 34 profiled campuses is achievable by 2031–2032. This aligns with the seed document target of 10 active sites and 6 continuous pilots in the near term, scaling to the 34-campus pipeline over the 5–7 year horizon. Current live deployments: 2 IDNs, with 6 US pilots under negotiation.',
+    title: '5–7 Year Commercial Target & Sales Cycle Assumption',
+    body: 'Hospital procurement cycles for autonomous infrastructure currently average 12–24 months. Autonomi models a base-case assumption of 18 months per deployment. However, compressing the IDN contracting cycle to 10–14 months is a defined strategic goal and a key sensitivity variable — achieving this would materially accelerate the revenue ramp. Factors that compress the cycle include: pre-negotiated IDN master service agreements, reference customers at peer institutions, and dedicated in-house procurement navigation. At 12–15 new deployments per year from 2026, 86 deployments across 34 campuses is achievable by 2031–2032. Current live deployments: 2 IDNs, with 6 US pilots under negotiation.',
   },
   {
     title: 'Hospital Size & Logistics Scale',

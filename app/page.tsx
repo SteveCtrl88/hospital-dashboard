@@ -527,14 +527,18 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
           <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.7,marginBottom:20,maxWidth:800}}>
             Autonomi operates a subscription-based RaaS model — monthly per-robot revenue inclusive of fleet software,
             AI orchestration, and support. Contracts run 6 years with optional upgrade paths, providing strong recurring
-            revenue visibility and customer lock-in. Average monthly gross revenue per deployed robot is{" "}
-            <strong style={{color:"var(--text)"}}>$2,500</strong>, yielding{" "}
-            <strong style={{color:"var(--text)"}}>$1,500 net per robot per month</strong> (60% net after 40% external servicing, insurance &amp; ops).
+            revenue visibility and customer retention. Average monthly gross revenue per deployed robot is <strong style={{color:"var(--text)"}}>$2,500</strong>.
+          </p>
+          <div style={{background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.25)",borderRadius:10,padding:"16px 20px",margin:"16px 0"}}>
+            <div style={{fontSize:20,fontWeight:900,color:"#10b981",lineHeight:1,marginBottom:6}}>${"1,500"} net per robot per month</div>
+            <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.5}}>60% net margin after 40% external servicing, insurance &amp; ops. <span style={{color:"var(--text3)",fontSize:12}}>Conservative base assumption — upside case of ~$3,000/robot/month possible as scale reduces external cost ratios.</span></div>
+          </div>
+          <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.7,marginBottom:20,maxWidth:800,marginTop:16}}>
           </p>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,marginBottom:24}}>
             {[
               {v:"$2,500",   l:"Gross MRR per robot",       sub:"Fixed monthly subscription",          c:"#3b82f6"},
-              {v:"$1,500",   l:"Net MRR per robot (60%)",   sub:"After 40% external parties",          c:"#10b981"},
+              {v:"$1,500",   l:"Net MRR per robot (60%)",   sub:"Conservative base · upside ~$3,000",  c:"#10b981"},
               {v:"$18,000",  l:"Net ARR per robot",         sub:"$1,500 × 12 months",                  c:"#10b981"},
               {v:"$10,000",  l:"Capex per robot",           sub:"Production + installation (Autonomi absorbs)", c:"#f59e0b"},
               {v:"6.7 mo",   l:"Payback period",            sub:"$10k capex ÷ $1,500 net/month",       c:"#8b5cf6"},
@@ -654,10 +658,66 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
               </table>
             </div>
           </div>
+
+          {/* Deployment scenario comparison */}
+          <div style={{marginTop:16,display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}}>
+            {/* Base case */}
+            <div style={{background:"rgba(59,130,246,0.06)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:10,padding:"16px 20px"}}>
+              <div style={{fontSize:10,fontWeight:700,color:"var(--accent2)",letterSpacing:"0.1em",textTransform:"uppercase" as const,marginBottom:8}}>Base Case — 34 Campuses</div>
+              <div style={{fontSize:20,fontWeight:900,color:"var(--text)",marginBottom:4}}>{RAMP_TOTAL.robots.toLocaleString()} robots · ${(RAMP_TOTAL.netARR/1e6).toFixed(1)}M net ARR</div>
+              <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.6,marginBottom:8}}>86 deployments across the 34 individually profiled campuses. 18-month average sales cycle assumption. 2026–2032 ramp with 20% YoY growth from 2030.</div>
+              <div style={{fontSize:11,color:"var(--text3)",fontStyle:"italic" as const}}>Rate-limiting factor: IDN contracting timelines (12–24 months). Each deployment requires separate facilities agreement, IT integration, and elevator access provisioning.</div>
+            </div>
+            {/* Upside case */}
+            <div style={{background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:10,padding:"16px 20px"}}>
+              <div style={{fontSize:10,fontWeight:700,color:"#10b981",letterSpacing:"0.1em",textTransform:"uppercase" as const,marginBottom:8}}>Upside Case — 68 Campuses (10–14 Month Cycle)</div>
+              <div style={{fontSize:20,fontWeight:900,color:"var(--text)",marginBottom:4}}>~5,900 robots · ~$106M net ARR</div>
+              <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.6,marginBottom:8}}>Doubles the campus pipeline by compressing the sales cycle to 10–14 months through pre-negotiated IDN master service agreements and reference customer pull. Same 7-year horizon.</div>
+              <div style={{fontSize:11,color:"#10b981",fontStyle:"italic" as const}}>Key lever: MSA templates that reduce per-site contracting from 6–9 months to 2–3 months. Already a defined strategic goal for the commercial team.</div>
+            </div>
+          </div>
+
+          {/* Sales cycle sensitivity table */}
+          <div style={{marginTop:16,...C.card(),overflow:"hidden"}}>
+            <div style={{padding:"12px 16px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+              <span style={C.cardTitle()}>Sales Cycle Sensitivity — Net ARR Impact by Deployment Rate</span>
+              <span style={{fontSize:11,color:"var(--text3)"}}>Base assumption: 18 months · Strategic target: 10–14 months</span>
+            </div>
+            <div style={{overflowX:"auto" as const}}>
+              <table style={{width:"100%",borderCollapse:"collapse" as const,fontSize:12}}>
+                <thead>
+                  <tr>
+                    {["Sales Cycle","Deploys/Year","2028 ARR","2030 ARR","2032 ARR","Total Robots 2032","vs Base"].map(h=>(
+                      <th key={h} style={{...C.th(),whiteSpace:"nowrap" as const}}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    {cycle:"24 months (slow)",  dpy:5,   y28:"$2.7M", y30:"$13.5M", y32:"$27M",  robots:1500, delta:"–36%", c:"#ef4444", base:false},
+                    {cycle:"18 months (base)",  dpy:8,   y28:"$9.0M", y30:"$27.0M", y32:"$53.1M",robots:2952, delta:"—",    c:"#f59e0b", base:true},
+                    {cycle:"14 months (target)",dpy:11,  y28:"$18M",  y30:"$40.5M", y32:"$72M",  robots:4000, delta:"+36%", c:"#10b981", base:false},
+                    {cycle:"10 months (upside)",dpy:15,  y28:"$27M",  y30:"$54M",   y32:"$99M+", robots:5500, delta:"+86%", c:"#3b82f6", base:false},
+                  ].map(({cycle,dpy,y28,y30,y32,robots,delta,c,base},i)=>(
+                    <tr key={cycle} style={{background:base?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.01)"}}>
+                      <td style={{...C.td(),fontWeight:base?800:600,color:c}}>{cycle}{base&&<span style={{fontSize:10,marginLeft:6,color:"#f59e0b",background:"rgba(245,158,11,0.15)",padding:"1px 6px",borderRadius:3}}>CURRENT</span>}</td>
+                      <td style={{...C.td(),fontFamily:"monospace",textAlign:"center" as const,color:"var(--text2)"}}>{dpy}</td>
+                      <td style={{...C.td(),fontFamily:"monospace",color:"var(--text2)"}}>{y28}</td>
+                      <td style={{...C.td(),fontFamily:"monospace",color:"var(--text2)"}}>{y30}</td>
+                      <td style={{...C.td(),fontFamily:"monospace",fontWeight:700,color:c}}>{y32}</td>
+                      <td style={{...C.td(),fontFamily:"monospace",color:"var(--text2)"}}>{robots.toLocaleString()}</td>
+                      <td style={{...C.td(),fontWeight:700,color:c,textAlign:"center" as const}}>{delta}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{padding:"10px 16px",background:"var(--surface2)",fontSize:11,color:"var(--text3)",borderTop:"1px solid var(--border)"}}>
+              ARR figures are net to Autonomi at $1,500/robot/month. All scenarios assume same 7-year horizon (2026–2032). Robots/year assumes avg 33 robots per new deployment. Compressing the sales cycle is the single highest-leverage commercial variable in the model.
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* ── MARKET FUNNEL ── */}
       <div style={{...C.card(),marginBottom:20}}>
         <div style={C.cardHead()}><span style={C.cardTitle()}>Market Opportunity — TAM / SAM / SOM</span><span style={{fontSize:11,color:"var(--text3)"}}>Revenue figures from Autonomi Seed Investment Document</span></div>
         <div style={{padding:"20px"}}>
@@ -849,9 +909,9 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                 {range:"100–199",  count:"~700",  robots:"6–11",   capex:"$60–110K",    arr:"$108–198K",    contract:"$648K–$1.2M",  verdict:"⚠️ Borderline",   c:"#6366f1", note:"Viable only via IDN system-wide deals. Fixed integration costs must be shared."},
                 {range:"200–299",  count:"~500",  robots:"11–17",  capex:"$110–170K",   arr:"$198–306K",    contract:"$1.2M–$1.8M",  verdict:"🟡 Emerging",     c:"#eab308", note:"Min. viable standalone if high-acuity or IDN-affiliated. 6.7 month capex recovery."},
                 {range:"300–499",  count:"~380",  robots:"17–28",  capex:"$170–280K",   arr:"$306–504K",    contract:"$1.8M–$3.0M",  verdict:"✅ Core SAM",     c:"#10b981", note:"Primary target. Strong ROI at exec level. 9.8× capex return. ~380 hospitals."},
-                {range:"500–799",  count:"~190",  robots:"28–45",  capex:"$280–450K",   arr:"$504K–$810K",  contract:"$3.0M–$4.9M",  verdict:"🎯 Prime Target", c:"#3b82f6", note:"C-suite procurement. Multi-year budgets. Recovered by month 7. Strong lock-in."},
+                {range:"500–799",  count:"~190",  robots:"28–45",  capex:"$280–450K",   arr:"$504K–$810K",  contract:"$3.0M–$4.9M",  verdict:"🎯 Prime Target", c:"#3b82f6", note:"C-suite procurement. Multi-year budgets. Recovered by month 7. Long-term retention."},
                 {range:"800–1,499",count:"~65",   robots:"45–84",  capex:"$450K–840K",  arr:"$810K–$1.5M",  contract:"$4.9M–$9.1M",  verdict:"🏆 Premium",     c:"#f97316", note:"Multi-building = 2–4 fleet deployments. $98K true profit per robot over 6 years."},
-                {range:"1,500+",   count:"~10",   robots:"84–168+",capex:"$840K–$1.7M+",arr:"$1.5M–$3.0M+", contract:"$9.1M–$18M+",  verdict:"⭐ Landmark",    c:"#ef4444", note:"NYP: 184 robots → $18M 6yr net contract. AdventHealth Orlando: 166 robots → $16M."},
+                {range:"1,500+",   count:"~10",   robots:"84–168+",capex:"$840K–$1.7M+",arr:"$1.5M–$3.0M+", contract:"$9.1M–$18M+",  verdict:"⭐ Landmark",    c:"#ef4444", note:"NYP: 184 robots → $18M 6yr net contract. AdventHealth Orlando: 166 robots → $16M 6yr net contract (2032 forecast based on 2,966 staffed beds × 0.056 formula; not current deployment)."},
               ].map(({range,count,robots,capex,arr,contract,verdict,c,note},i)=>(
                 <tr key={range} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
                   <td style={{...C.td(),fontWeight:800,color:c,whiteSpace:"nowrap" as const}}>{range} beds</td>
@@ -904,7 +964,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
 
 // ── Root Page ──────────────────────────────────────────────────────────────────
 export default function DashboardPage(){
-  const [tab,setTab]=useState<'hospitals'|'idn'|'adventhealth'|'thesis'>('hospitals')
+  const [tab,setTab]=useState<'hospitals'|'idn'|'adventhealth'|'thesis'>('thesis')
   const [user,setUser]=useState<{email:string|null}|null>(null)
   const [authChecking,setAuthChecking]=useState(true)
   const router=useRouter()
@@ -956,10 +1016,10 @@ export default function DashboardPage(){
   useEffect(()=>{loadData()},[loadData])
 
   const TABS=[
+    {id:'thesis',       label:'Market Thesis',          icon:TrendingUp},
     {id:'hospitals',    label:'All US Hospitals',       icon:BedDouble},
     {id:'idn',          label:'Top 20 IDN Groups',      icon:Building2},
     {id:'adventhealth', label:'AdventHealth Deep-Dive', icon:TrendingUp},
-    {id:'thesis',       label:'Market Thesis',          icon:TrendingUp},
   ]
 
   async function handleSignOut(){
