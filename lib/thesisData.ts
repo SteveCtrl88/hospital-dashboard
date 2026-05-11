@@ -1,39 +1,25 @@
-// ─── AUTONOMI MARKET THESIS DATA ────────────────────────────────────────────
-// All revenue figures sourced from Autonomi/Ctrl Seed Investment Document (project knowledge)
-// Robot density formula derived from live Autonomi deployment data (–20% conservative)
-// Hospital counts: AHA Annual Survey 2024, Definitive Health HospitalView Aug 2025
-//
-// REVENUE MODEL (from Seed Document):
-//   $2,500 average monthly revenue per deployed robot
-//   6-year RaaS contracts with optional upgrades
-//   Revenue split: 59% ops/maintenance/insurance, 26% commissions, 15% net
-//   Net revenue per robot per month: $2,500 × 15% = $375
-//
-// ROBOT DENSITY (from live deployments, –20% conservative):
-//   Pharmacy patient-specific:  0.008 robots/bed
-//   Pharmacy restock:           0.008 robots/bed
-//   Lab specimen transport:     0.004 robots/bed
-//   Food & nutrition:           0.012 robots/bed
-//   EVS:                        0.024 robots/bed
-//   TOTAL:                      0.056 robots/bed
-//
-// KEY LOGIC: Robots = beds × 0.056 per HOSPITAL (not per deployment)
-// Deployments = separate fleet installs; robots are SPLIT across them, not multiplied
+// ─── AUTONOMI MARKET THESIS DATA ─────────────────────────────────────────────
+// Revenue model corrected May 2026
+// Deployment model: 1 deployment = one autonomous fleet in one ~600-bed building
+// Hospital = contracting entity (may contain multiple buildings / deployments)
+// Robot count = total beds × 0.056, SPLIT across buildings — does NOT increase with building count
 
+// ── Revenue Model ──────────────────────────────────────────────────────────────
 export const REVENUE_MODEL = {
-  monthly_per_robot:      2500,   // $ gross (fixed, from Seed Document)
-  capex_per_robot:        10000,  // one-time production + installation, absorbed by Autonomi
-  external_pct:           0.40,   // servicing, insurance, ops paid to external parties
-  net_pct:                0.60,   // Autonomi net margin
-  net_per_robot_month:    1500,   // $2,500 × 60%
-  net_per_robot_year:     18000,  // $1,500 × 12
+  monthly_per_robot:      3000,    // $ gross
+  capex_per_robot:        10000,   // one-time, absorbed by Autonomi
+  external_pct:           0.40,
+  net_pct:                0.60,
+  net_per_robot_month:    1800,    // $3,000 × 60%
+  net_per_robot_year:     21600,   // $1,800 × 12
   contract_years:         6,
-  net_contract_value:     108000, // $18,000 × 6 years
-  payback_months:         6.7,    // $10,000 capex ÷ $1,500 net/month
-  true_profit_per_robot:  98000,  // $108,000 net contract − $10,000 capex
-  capex_return_x:         9.8,    // 9.8× return on capex over 6 years
+  net_contract_value:     129600,  // $21,600 × 6
+  payback_months:         5.6,     // $10,000 ÷ $1,800
+  true_profit_per_robot:  119600,  // $129,600 − $10,000
+  capex_return_x:         13.0,
 }
 
+// ── Robot Density Formula ──────────────────────────────────────────────────────
 export const ROBOT_FORMULA = {
   pharmacy_patient: { ratio: 0.008, label: 'Pharmacy — Patient-specific meds', description: '1 robot per 125 beds', beds_per_robot: 125 },
   pharmacy_restock: { ratio: 0.008, label: 'Pharmacy — Restock runs',           description: '1 robot per 125 beds', beds_per_robot: 125 },
@@ -46,16 +32,28 @@ export const ROBOTS_PER_BED = 0.056
 
 export function calcRobots(beds: number) {
   return {
-    pharmacy_patient: Math.round(beds * 0.008 * 10) / 10,
-    pharmacy_restock: Math.round(beds * 0.008 * 10) / 10,
-    labs:             Math.round(beds * 0.004 * 10) / 10,
-    food:             Math.round(beds * 0.012 * 10) / 10,
-    evs:              Math.round(beds * 0.024 * 10) / 10,
+    pharmacy_patient: Math.round(beds * 0.008),
+    pharmacy_restock: Math.round(beds * 0.008),
+    labs:             Math.round(beds * 0.004),
+    food:             Math.round(beds * 0.012),
+    evs:              Math.round(beds * 0.024),
     total:            Math.round(beds * 0.056),
   }
 }
 
-// ── 34 profiled hospital campuses ────────────────────────────────────────────
+// ── Deployment Model ───────────────────────────────────────────────────────────
+// 1 deployment = one autonomous fleet in one ~600-bed building
+// Never use "campus" — say "building" or "deployment"
+export const DEPLOYMENT_MODEL = {
+  beds_per_building:        600,
+  profiled_hospitals:       34,
+  profiled_buildings:       82,   // = deployments
+  profiled_robots:          2344,
+  avg_robots_per_building:  28.6,
+  avg_robots_per_hospital:  68.9,
+}
+
+// ── 34 Profiled Hospitals ──────────────────────────────────────────────────────
 export const PROFILED_HOSPITALS = [
   { name: "NYP Weill Cornell",     beds: 3286, deployments: 4 },
   { name: "AdventHealth Orlando",  beds: 2966, deployments: 4 },
@@ -93,32 +91,31 @@ export const PROFILED_HOSPITALS = [
   { name: "Parkland Dallas",       beds:  862, deployments: 1 },
 ]
 
-const _totalBeds   = PROFILED_HOSPITALS.reduce((a, h) => a + h.beds, 0)
-const _totalDeps   = PROFILED_HOSPITALS.reduce((a, h) => a + h.deployments, 0)
+const _totalBeds = PROFILED_HOSPITALS.reduce((a, h) => a + h.beds, 0)
+const _totalDeps = PROFILED_HOSPITALS.reduce((a, h) => a + h.deployments, 0)
 const _totalRobots = PROFILED_HOSPITALS.reduce((a, h) => a + Math.round(h.beds * ROBOTS_PER_BED), 0)
 
 export const NEAR_TERM = {
-  hospitals:         34,
-  total_beds:        _totalBeds,
-  deployments:       _totalDeps,
-  total_robots:      _totalRobots,
-  robots_per_dep:    Math.round(_totalRobots / _totalDeps),
-  robots_per_hosp:   Math.round(_totalRobots / 34),
-  capex_required:    _totalRobots * 10000,
-  gross_mrr:         _totalRobots * 2500,
-  gross_arr:         _totalRobots * 2500 * 12,
-  net_mrr:           _totalRobots * 1500,
-  net_arr:           _totalRobots * 18000,
-  net_contract_val:  _totalRobots * 108000,
-  true_profit:       _totalRobots * 98000,
+  hospitals:        34,
+  total_beds:       _totalBeds,
+  deployments:      _totalDeps,       // 82 buildings
+  total_robots:     _totalRobots,     // 2,344
+  robots_per_dep:   Math.round((_totalRobots / _totalDeps) * 10) / 10,  // 28.6
+  robots_per_hosp:  Math.round((_totalRobots / 34) * 10) / 10,          // 68.9
+  capex_required:   _totalRobots * 10000,
+  gross_mrr:        _totalRobots * 3000,
+  net_mrr:          _totalRobots * 1800,
+  net_arr:          _totalRobots * 21600,
+  net_contract_val: _totalRobots * 129600,
+  true_profit:      _totalRobots * 119600,
 }
 
-// ── Market tiers — revenue from Seed Document, robots from formula ─────────
+// ── Market Tiers (TAM + SAM only — SOM removed) ───────────────────────────────
 export const MARKET_TIERS = [
   {
     tier: 'TAM',
     label: 'Total Addressable Market',
-    description: 'The total internal logistics spend across all 6,093 US registered hospitals. Internal staff logistics costs represent approximately 3% of hospital operating expenditure. With 920,000 hospital beds nationally and an average ops cost of $3,000/day per logistics role, the total annual spend on internal hospital logistics is $34.46 billion.',
+    description: 'The total internal logistics spend across all 6,093 US registered hospitals. Internal staff logistics costs represent approximately 3% of hospital operating expenditure. With a 10% national vacancy rate and 27% average attrition in logistics roles, the structural demand for automation is acute. Total annual spend on internal hospital logistics: $34.46 billion.',
     hospitals: 6093,
     total_beds: 917000,
     deployments: 6702,
@@ -132,7 +129,7 @@ export const MARKET_TIERS = [
   {
     tier: 'SAM',
     label: 'Serviceable Addressable Market',
-    description: 'The annual spend addressable by automation and logistics robots — approximately 25% of TAM, targeting hospitals where logistics complexity and staffing vacancy rates (10% nationally, 27% attrition) create the strongest ROI case. This aligns with the ~760 hospitals at 300+ beds where Autonomi\'s platform generates compelling unit economics.',
+    description: 'The annual spend addressable by automation and logistics robots — approximately 25% of TAM. This aligns with the ~760 hospitals at 300+ beds where logistics complexity, pharmacy volume, and staffing vacancy costs create the strongest ROI case for Autonomi\'s platform.',
     hospitals: 760,
     total_beds: 342000,
     deployments: 950,
@@ -144,106 +141,85 @@ export const MARKET_TIERS = [
     source: 'Autonomi/Ctrl Seed Investment Document; AHA Annual Survey 2024',
   },
   {
-    tier: 'SOM',
-    label: 'Serviceable Obtainable Market',
-    description: 'Revenue potential within 5 years at 10% penetration of large hospitals — the 270 facilities with 500+ staffed beds where procurement authority sits at executive level, capital budgets support multi-year infrastructure contracts, and logistics complexity is highest. At $1,500 net/robot/month (60% net margin), 10,584 robots generates $190M net ARR for Autonomi.',
-    hospitals: 270,
-    total_beds: 189000,
-    deployments: 364,
-    total_robots: Math.round(189000 * 0.056),
-    revenue_b: 0.647,
-    revenue_label: '$647M seed doc / $190M net ARR',
-    revenue_basis: '10% penetration of large hospitals (Seed Doc); 10,584 robots × $18K net ARR',
-    color: '#10b981',
-    source: 'Autonomi/Ctrl Seed Investment Document; Definitive Health HospitalView Aug 2025',
-  },
-  {
     tier: 'NEAR',
     label: 'Near-Term Pipeline (2026–2032)',
-    description: '34 individually profiled hospital campuses. 7-year ramp reaches 2,952 total robots by 2032 at 20% YoY growth from 2030 baseline. At $1,500 net/robot/month (60% of $2,500 gross), end-state generates $4.43M net MRR and $53.1M net ARR. $29.5M total capex absorbed upfront, each robot recovered in 6.7 months. $319M total net contract value over 6 years.',
+    description: '34 individually profiled hospitals comprising 82 buildings / deployment units. 2,344 total robots at avg 28.6 robots per building. 7-year ramp reaches 2,952 robots by 2032 at 20% YoY growth from 2030. At $1,800 net/robot/month (60% of $3,000 gross), end-state generates $5.314M net MRR and $63.76M net ARR. $29.5M total capex absorbed, each robot recovered in 5.6 months. $382.7M total net contract value over 6 years.',
     hospitals: 34,
     total_beds: _totalBeds,
     deployments: _totalDeps,
     total_robots: 2952,
-    revenue_b: parseFloat((2952 * 18000 / 1e9).toFixed(3)),
-    revenue_label: '$53.1M net ARR',
-    revenue_basis: '2,952 robots × $1,500 net/month × 12 (2032 run-rate)',
+    revenue_b: parseFloat((2952 * 21600 / 1e9).toFixed(3)),
+    revenue_label: '$63.76M net ARR',
+    revenue_basis: '2,952 robots × $1,800 net/month × 12 (2032 run-rate)',
     color: '#f59e0b',
-    source: 'Autonomi internal campus analysis; AHD Medicare Cost Reports',
+    source: 'Autonomi internal analysis; AHD Medicare Cost Reports',
   },
 ]
 
 export const BED_SIZE_ROBOTS = [
-  { label: '100 beds',   beds: 100,  robots: 6  },
-  { label: '200 beds',   beds: 200,  robots: 11 },
-  { label: '300 beds',   beds: 300,  robots: 17 },
-  { label: '500 beds',   beds: 500,  robots: 28 },
-  { label: '750 beds',   beds: 750,  robots: 42 },
-  { label: '1,000 beds', beds: 1000, robots: 56 },
-  { label: '1,500 beds', beds: 1500, robots: 84 },
+  { label: '100 beds',   beds: 100,  robots: 6   },
+  { label: '200 beds',   beds: 200,  robots: 11  },
+  { label: '300 beds',   beds: 300,  robots: 17  },
+  { label: '500 beds',   beds: 500,  robots: 28  },
+  { label: '750 beds',   beds: 750,  robots: 42  },
+  { label: '1,000 beds', beds: 1000, robots: 56  },
+  { label: '1,500 beds', beds: 1500, robots: 84  },
   { label: '2,000 beds', beds: 2000, robots: 112 },
   { label: '3,000 beds', beds: 3000, robots: 168 },
 ]
 
-
-// Ramp totals — computed from DEPLOYMENT_RAMP schedule
+// ── Ramp Total (2032 end-state) ────────────────────────────────────────────────
 export const RAMP_TOTAL = {
-  robots:        2952,
-  deployments:   86,   // deployment unit count stays the same (same 34 campuses)
-  grossMRR:      2952 * 2500,
-  netMRR:        2952 * 1500,
-  netARR:        2952 * 18000,
-  capex:         2952 * 10000,
-  contractVal:   2952 * 108000,
-  trueProfit:    2952 * 98000,
+  robots:       2952,
+  deployments:  82,
+  grossMRR:     8856000,   // 2,952 × $3,000
+  netMRR:       5313600,   // 2,952 × $1,800
+  netARR:       63763200,  // 2,952 × $21,600
+  capex:        29520000,  // 2,952 × $10,000
+  contractVal:  382579200, // 2,952 × $129,600
+  trueProfit:   353059200, // 2,952 × $119,600
 }
 
-// ── 7-Year Deployment Ramp ────────────────────────────────────────────────────
-// Year 1–2: Validation phase (max 200 robots — long sales cycle, biz case development)
-// Year 3–7: Scale phase (ramp to 2,345 total robots)
+// ── 7-Year Deployment Ramp ─────────────────────────────────────────────────────
 export const DEPLOYMENT_RAMP = [
-  { year: 1, label: "2026", phase: "Validation",  newRobots:  50, description: "2 live IDN deployments + 6 pilots converting. Market validation and reference case development." },
-  { year: 2, label: "2027", phase: "Validation",  newRobots: 150, description: "First IDN system-wide contract signed. Business case proven. Sales cycle compression begins." },
-  { year: 3, label: "2028", phase: "Early Scale", newRobots: 300, description: "3–4 new hospital system contracts. Reference customers driving inbound pipeline growth." },
-  { year: 4, label: "2029", phase: "Growth",      newRobots: 450, description: "Procurement cycle shortens with established references. 6–8 new contracts per year." },
-  { year: 5, label: "2030", phase: "Growth",      newRobots: 550, description: "SAM penetration deepening. IDN-wide rollouts across multi-site hospital networks." },
-  { year: 6, label: "2031", phase: "Scale (+20%)", newRobots: 660, description: "20% YoY growth on 2030 baseline (550 × 1.20). Premium tier 800+ bed hospitals entering." },
-  { year: 7, label: "2032", phase: "Scale (+20%)", newRobots: 792, description: "20% YoY growth on 2031 baseline (660 × 1.20). SAM penetration expanding beyond initial 34-campus pipeline." },
+  { year: 1, label: "2026", phase: "Validation",   newRobots:  50, description: "2 live IDN deployments + 6 pilots converting. Market validation and reference case development." },
+  { year: 2, label: "2027", phase: "Validation",   newRobots: 150, description: "First IDN system-wide contract signed. Business case proven. Sales cycle compression begins." },
+  { year: 3, label: "2028", phase: "Early Scale",  newRobots: 300, description: "3–4 new hospital system contracts. Reference customers driving inbound pipeline growth." },
+  { year: 4, label: "2029", phase: "Growth",       newRobots: 450, description: "Procurement cycle shortens with established references. 6–8 new contracts per year." },
+  { year: 5, label: "2030", phase: "Growth",       newRobots: 550, description: "SAM penetration deepening. IDN-wide rollouts across multi-building hospital networks." },
+  { year: 6, label: "2031", phase: "Scale (+20%)", newRobots: 660, description: "20% YoY growth on 2030 baseline. Premium tier 800+ bed hospitals entering." },
+  { year: 7, label: "2032", phase: "Scale (+20%)", newRobots: 792, description: "20% YoY growth on 2031 baseline. Pipeline expansion beyond initial 34 hospitals." },
 ].map((y, i, arr) => {
   const cumulative = arr.slice(0, i + 1).reduce((a, r) => a + r.newRobots, 0)
   return {
     ...y,
     cumulative,
-    grossMRR:  cumulative * 2500,
-    netMRR:    cumulative * 1500,
-    netARR:    cumulative * 18000,
+    grossMRR:  cumulative * 3000,
+    netMRR:    cumulative * 1800,
+    netARR:    cumulative * 21600,
     capexYear: y.newRobots * 10000,
   }
 })
 
 export const KEY_ASSUMPTIONS = [
   {
-    title: 'Revenue Model — $2,500 Gross / $1,500 Net Per Robot Per Month',
-    body: 'Autonomi operates a Robotics-as-a-Service (RaaS) model at $2,500/robot/month fixed. 40% ($1,000) goes to external parties covering servicing, insurance, and monthly operational expenses. Autonomi retains 60% net — $1,500/robot/month, $18,000/robot/year. Contracts run 6 years, yielding $108,000 net contract value per robot. Autonomi absorbs a $10,000 one-time capex per robot for production and installation, recovered in approximately 6.7 months. After payback, each robot generates $1,500/month in pure net margin for the remaining ~65 months of the contract — a 9.8× return on capex.',
+    title: 'Revenue Model — $3,000 Gross / $1,800 Net Per Robot Per Month',
+    body: 'Autonomi operates a RaaS model at $3,000/robot/month fixed. 40% ($1,200) covers external servicing, insurance, and operational expenses. Autonomi retains 60% net — $1,800/robot/month, $21,600/robot/year. Contracts run 6 years, yielding $129,600 net contract value per robot. A $10,000 one-time capex is absorbed by Autonomi per robot, recovered in 5.6 months. After payback, each robot generates $1,800/month for the remaining ~66 months — a 13× return on capex. Conservative base assumption; upside case of ~$3,600+/robot/month is possible as scale reduces external cost ratios.',
   },
   {
-    title: 'TAM/SAM/SOM — From Autonomi Seed Investment Document',
-    body: 'The $34.46B TAM, $8.6B SAM, and $647M SOM figures are sourced directly from the Autonomi/Ctrl Seed Investment Document. Internal staff logistics costs represent ~3% of hospital operating expenditure. A 10% national vacancy rate and 27% average attrition rate in logistics roles create structural demand for automation. The SAM represents the spend addressable by automation logistics robots; the SOM represents 10% penetration of large hospitals within 5 years.',
+    title: 'TAM / SAM — From Autonomi Seed Investment Document',
+    body: 'The $34.46B TAM and $8.6B SAM figures are sourced directly from the Autonomi/Ctrl Seed Investment Document. Internal staff logistics costs represent ~3% of hospital operating expenditure. A 10% national vacancy rate and 27% average attrition rate in logistics roles create structural demand for automation.',
+  },
+  {
+    title: 'Deployment Model — One Building, One Fleet',
+    body: 'The standard Autonomi deployment unit is one autonomous fleet serving one ~600-bed building. A hospital with 1,800 beds across 3 physically separate buildings = 3 deployments. Total robot count is calculated on total staffed beds (× 0.056) and then divided across buildings — it does not increase with building count. The 34 profiled hospitals contain 82 buildings, 2,344 total robots, and average 28.6 robots per building.',
   },
   {
     title: 'Robot Density — 0.056 Robots Per Staffed Bed',
-    body: "Derived from Autonomi's live deployment data across operating hospital sites across five use cases: patient-specific pharmacy (0.008/bed), pharmacy restock (0.008/bed), lab specimen transport (0.004/bed), food delivery (0.012/bed), and EVS (0.024/bed). All ratios reduced by 20% from observed figures to produce a conservative planning baseline. A 600-bed hospital moves 37,000 items and 90,000 lbs daily — the density formula captures the robot requirement to automate this workflow.",
+    body: "Derived from Autonomi's live deployment data across five use cases, reduced 20% for conservatism. A 600-bed building moves 37,000 items and 90,000 lbs daily — the density formula captures the robot requirement to automate this. Use case breakdown: pharmacy patient-specific (1:125 beds), pharmacy restock (1:125), lab transport (1:250), food delivery (1:83), EVS (1:42).",
   },
   {
-    title: 'Robots Per Hospital vs Per Deployment',
-    body: 'Robots are calculated once per hospital based on total staffed beds. Deployments represent separate autonomous fleet installs — a multi-building campus requires independent fleets per building (separate elevator banks, pharmacy locations, logistics zones), but the total robot count does not increase. A 1,000-bed hospital split across 3 buildings requires 56 robots total (~19 per building), not 56 × 3 = 168.',
-  },
-  {
-    title: '5–7 Year Commercial Target & Sales Cycle Assumption',
-    body: 'Hospital procurement cycles for autonomous infrastructure currently average 12–24 months. Autonomi models a base-case assumption of 18 months per deployment. However, compressing the IDN contracting cycle to 10–14 months is a defined strategic goal and a key sensitivity variable — achieving this would materially accelerate the revenue ramp. Factors that compress the cycle include: pre-negotiated IDN master service agreements, reference customers at peer institutions, and dedicated in-house procurement navigation. At 12–15 new deployments per year from 2026, 86 deployments across 34 campuses is achievable by 2031–2032. Current live deployments: 2 IDNs, with 6 US pilots under negotiation.',
-  },
-  {
-    title: 'Hospital Size & Logistics Scale',
-    body: 'A 600-bed hospital moves 37,000 items and 90,000 lbs daily — mostly by foot (Autonomi Seed Document). At 0.056 robots/bed, a 600-bed facility requires approximately 34 robots across pharmacy, lab, food, and EVS workflows. The 300+ bed threshold (SAM) represents the point at which logistics complexity, daily item volume, and staffing vacancy costs create a sustainable ROI case for autonomous delivery infrastructure.',
+    title: '5–7 Year Commercial Target & Sales Cycle',
+    body: 'Hospital procurement currently averages 12–24 months. Autonomi models 18 months as the base case. Compressing to 10–14 months via pre-negotiated IDN master service agreements is a defined strategic goal and the single highest-leverage variable in the revenue model — compressing by 4–8 months roughly doubles the deployable pipeline within the same 7-year window. Current status: 2 live IDN deployments, 6 US pilots under negotiation.',
   },
 ]

@@ -151,8 +151,8 @@ function IDNDeepDive({group,hospitals}:{group:IDNGroup;hospitals:Hospital[]}){
       {/* Stats row */}
       <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(160px,1fr))',gap:12,marginBottom:20}}>
         <StatCard label="In Database" value={hospitals.length.toString()} sub="Tracked hospitals" colour="var(--accent2)"/>
-        <StatCard label="Largest Site" value={maxBeds>0?maxBeds.toLocaleString():'—'} sub="Beds (flagship campus)" colour="var(--red)"/>
-        <StatCard label="500+ Bed Sites" value={above500.toString()} sub="Large campuses" colour="var(--orange)"/>
+        <StatCard label="Largest Site" value={maxBeds>0?maxBeds.toLocaleString():'—'} sub="Beds (flagship building)" colour="var(--red)"/>
+        <StatCard label="500+ Bed Sites" value={above500.toString()} sub="Large hospitals" colour="var(--orange)"/>
         <StatCard label="Total Tracked Beds" value={totalBeds>0?totalBeds.toLocaleString():'—'} sub="Sum of known bed counts" colour="var(--green)"/>
       </div>
 
@@ -454,7 +454,7 @@ function AdventHealthTab({hospitals}:{hospitals:Hospital[]}){
       <IDNDeepDive group={fakeGroup} hospitals={ah}/>
       <div style={{background:'rgba(59,130,246,0.06)',border:'1px solid rgba(59,130,246,0.2)',borderRadius:12,padding:'14px 20px',marginTop:20}}>
         <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:8}}><Info size={13} style={{color:'var(--accent2)',flexShrink:0}}/><span style={{fontSize:11,fontWeight:700,color:'var(--accent2)',letterSpacing:'0.05em'}}>DATA NOTE</span></div>
-        <p style={{margin:0,fontSize:12,color:'var(--text2)',lineHeight:1.7}}>AdventHealth Orlando (2,787 staffed beds per Medicare Cost Report) operates under a multi-campus license — this is the #2 largest hospital in the US. The Definitive Health executive CSV excluded this flagship due to consolidated licensing. Bed counts sourced from Definitive Health HospitalView Aug 2025.</p>
+        <p style={{margin:0,fontSize:12,color:'var(--text2)',lineHeight:1.7}}>AdventHealth Orlando (2,787 staffed beds per Medicare Cost Report) operates under a multi-building license — this is the #2 largest hospital in the US. The Definitive Health executive CSV excluded this flagship due to consolidated licensing. Bed counts sourced from Definitive Health HospitalView Aug 2025.</p>
       </div>
     </div>
   )
@@ -475,7 +475,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
   const nearCapex        = RAMP_TOTAL.capex
   const nearContractVal  = RAMP_TOTAL.contractVal
   const nearTrueProfit   = RAMP_TOTAL.trueProfit
-  const somRobots        = MARKET_TIERS.find(t=>t.tier==='SOM')!.total_robots
+  const somRobots        = MARKET_TIERS.find(t=>t.tier==='SAM')!.total_robots
   const somNetARR        = somRobots * REVENUE_MODEL.net_per_robot_year
 
   const bedRobotData = BED_SIZE_ROBOTS.map(r=>({
@@ -508,8 +508,8 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             {[
               {v:"$34.46B",    l:"Total annual US hospital logistics spend (TAM)", c:"#6366f1"},
               {v:"$8.6B",      l:"Addressable by automation (SAM)",                c:"#3b82f6"},
-              {v:"$647M",      l:"5-year revenue potential at 10% penetration (SOM)", c:"#10b981"},
-              {v:"$2,500",     l:"Gross monthly revenue per deployed robot",       c:"#f59e0b"},
+              {v:"$8.6B",      l:"Serviceable Addressable Market (SAM)",              c:"#10b981"},
+              {v:"$3,000",     l:"Gross monthly revenue per deployed robot",       c:"#f59e0b"},
             ].map(({v,l,c})=>(
               <div key={l}>
                 <div style={{fontSize:26,fontWeight:900,color:c,lineHeight:1}}>{v}</div>
@@ -527,23 +527,23 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
           <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.7,marginBottom:20,maxWidth:800}}>
             Autonomi operates a subscription-based RaaS model — monthly per-robot revenue inclusive of fleet software,
             AI orchestration, and support. Contracts run 6 years with optional upgrade paths, providing strong recurring
-            revenue visibility and customer retention. Average monthly gross revenue per deployed robot is <strong style={{color:"var(--text)"}}>$2,500</strong>.
+            revenue visibility and customer retention. Average monthly gross revenue per deployed robot is <strong style={{color:"var(--text)"}}>$3,000</strong>.
           </p>
           <div style={{background:"rgba(16,185,129,0.08)",border:"1px solid rgba(16,185,129,0.25)",borderRadius:10,padding:"16px 20px",margin:"16px 0"}}>
-            <div style={{fontSize:20,fontWeight:900,color:"#10b981",lineHeight:1,marginBottom:6}}>${"1,500"} net per robot per month</div>
-            <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.5}}>60% net margin after 40% external servicing, insurance &amp; ops. <span style={{color:"var(--text3)",fontSize:12}}>Conservative base assumption — upside case of ~$3,000/robot/month possible as scale reduces external cost ratios.</span></div>
+            <div style={{fontSize:20,fontWeight:900,color:"#10b981",lineHeight:1,marginBottom:6}}>${"1,800"} net per robot per month</div>
+            <div style={{fontSize:13,color:"var(--text2)",lineHeight:1.5}}>60% net margin after 40% external servicing, insurance &amp; ops. <span style={{color:"var(--text3)",fontSize:12}}>Conservative base — this is an under-promise posture. Upside case as scale matures remains meaningful.</span></div>
           </div>
           <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.7,marginBottom:20,maxWidth:800,marginTop:16}}>
           </p>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:12,marginBottom:24}}>
             {[
-              {v:"$2,500",   l:"Gross MRR per robot",       sub:"Fixed monthly subscription",          c:"#3b82f6"},
-              {v:"$1,500",   l:"Net MRR per robot (60%)",   sub:"Conservative base · upside ~$3,000",  c:"#10b981"},
-              {v:"$18,000",  l:"Net ARR per robot",         sub:"$1,500 × 12 months",                  c:"#10b981"},
+              {v:"$3,000",   l:"Gross MRR per robot",        sub:"Fixed monthly subscription",          c:"#3b82f6"},
+              {v:"$1,800",   l:"Net MRR per robot (60%)",   sub:"Conservative base · upside ~$3,600+", c:"#10b981"},
+              {v:"$21,600",  l:"Net ARR per robot",         sub:"$1,800 × 12 months",                  c:"#10b981"},
               {v:"$10,000",  l:"Capex per robot",           sub:"Production + installation (Autonomi absorbs)", c:"#f59e0b"},
-              {v:"6.7 mo",   l:"Payback period",            sub:"$10k capex ÷ $1,500 net/month",       c:"#8b5cf6"},
-              {v:"9.8×",     l:"Return on capex",           sub:"Over 6-year contract term",           c:"#ef4444"},
-              {v:"$98,000",  l:"True profit per robot",     sub:"$108k net contract − $10k capex",     c:"#ef4444"},
+              {v:"5.6 mo",   l:"Payback period",            sub:"$10k capex ÷ $1,800 net/month",       c:"#8b5cf6"},
+              {v:"13.0×",    l:"Return on capex",           sub:"Over 6-year contract term",           c:"#ef4444"},
+              {v:"$119,600", l:"True profit per robot",     sub:"$129.6k net contract − $10k capex",   c:"#ef4444"},
               {v:"6 years",  l:"Contract term",             sub:"With upgrade optionality",            c:"#6366f1"},
             ].map(({v,l,sub,c})=>(
               <div key={l} style={{background:"var(--surface2)",border:`1px solid ${c}33`,borderRadius:10,padding:"14px 16px"}}>
@@ -559,9 +559,9 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             <div style={{fontSize:11,fontWeight:700,color:"#f59e0b",marginBottom:12,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>7-Year Deployment Target — End State (2032)</div>
             <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))",gap:16}}>
               {[
-                {v:RAMP_TOTAL.robots.toLocaleString(),                         l:"Total robots by 2032",            c:"#8b5cf6"},
+                {v:RAMP_TOTAL.robots.toLocaleString(),                         l:"Total robots by 2032 (ramp target)",c:"#8b5cf6"},
                 {v:`$${(RAMP_TOTAL.capex/1000000).toFixed(1)}M`,              l:"Total capex (Autonomi absorbs)",  c:"#f59e0b"},
-                {v:`$${(RAMP_TOTAL.grossMRR/1000000).toFixed(2)}M`,           l:"Gross MRR at full deployment",    c:"#3b82f6"},
+                {v:`$${(RAMP_TOTAL.grossMRR/1000000).toFixed(3)}M`,           l:"Gross MRR at full deployment",    c:"#3b82f6"},
                 {v:`$${(RAMP_TOTAL.netMRR/1000000).toFixed(2)}M`,             l:"Net MRR to Autonomi (60%)",       c:"#10b981"},
                 {v:`$${(RAMP_TOTAL.netARR/1000000).toFixed(1)}M`,             l:"Net ARR run-rate",                c:"#10b981"},
                 {v:`$${(RAMP_TOTAL.contractVal/1000000).toFixed(0)}M`,        l:"6yr net contract value",          c:"#6366f1"},
@@ -579,7 +579,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
           <div style={{...C.card(),overflow:"hidden"}}>
             <div style={{padding:"14px 20px",borderBottom:"1px solid var(--border)",display:"flex",alignItems:"center",justifyContent:"space-between"}}>
               <span style={C.cardTitle()}>7-Year Deployment Ramp — 2026 to 2032</span>
-              <span style={{fontSize:11,color:"var(--text3)"}}>Year 1–2 capped at 200 robots · validation &amp; business case development</span>
+              <span style={{fontSize:11,color:"var(--text3)"}}>Years 1–2 capped at 200 robots · validation &amp; business case development</span>
             </div>
             {/* Bar chart */}
             <div style={{padding:"16px 16px 4px"}}>
@@ -620,7 +620,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                 <tbody>
                   {DEPLOYMENT_RAMP.map((y,i)=>{
                     const phaseColor = y.phase==="Validation"?"#6366f1":y.phase==="Early Scale"?"#3b82f6":y.phase==="Growth"?"#10b981":"#f59e0b"
-                    const cumulCapex = DEPLOYMENT_RAMP.slice(0,i+1).reduce((a,r)=>a+r.capexYear,0)
+                    const cumulCapex = (y as {cumulCapex?: number}).cumulCapex ?? DEPLOYMENT_RAMP.slice(0,i+1).reduce((a,r)=>a+r.capexYear,0)
                     return (
                       <tr key={y.year} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
                         <td style={{...C.td(),fontWeight:700,color:"var(--text)"}}>{y.label}</td>
@@ -635,7 +635,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                         </td>
                         <td style={{...C.td(),fontFamily:"monospace",fontSize:12,color:"#3b82f6"}}>${(y.grossMRR/1000).toFixed(0)}K</td>
                         <td style={{...C.td(),fontFamily:"monospace",fontSize:12,fontWeight:700,color:"#10b981"}}>${(y.netMRR/1000).toFixed(0)}K</td>
-                        <td style={{...C.td(),fontFamily:"monospace",fontSize:12,fontWeight:700,color:"#10b981"}}>${(y.netARR/1000000).toFixed(1)}M</td>
+                        <td style={{...C.td(),fontFamily:"monospace",fontSize:12,fontWeight:700,color:"#10b981"}}>${(y.netARR/1000000).toFixed(2)}M</td>
                         <td style={{...C.td(),fontFamily:"monospace",fontSize:11,color:"var(--text3)"}}>${(cumulCapex/1000000).toFixed(1)}M</td>
                         <td style={{...C.td(),fontSize:11,color:"var(--text2)",maxWidth:220}}>{y.description}</td>
                       </tr>
@@ -648,7 +648,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                     <td style={C.td()}/>
                     <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",color:"#f59e0b",fontWeight:800}}>{RAMP_TOTAL.robots.toLocaleString()}</td>
                     <td style={{...C.td(),textAlign:"center" as const,fontFamily:"monospace",fontWeight:900,color:"#f59e0b"}}>{RAMP_TOTAL.robots.toLocaleString()}</td>
-                    <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6",fontWeight:700}}>${(RAMP_TOTAL.grossMRR/1000000).toFixed(2)}M</td>
+                    <td style={{...C.td(),fontFamily:"monospace",color:"#3b82f6",fontWeight:700}}>${(RAMP_TOTAL.grossMRR/1000000).toFixed(3)}M</td>
                     <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(RAMP_TOTAL.netMRR/1000000).toFixed(2)}M</td>
                     <td style={{...C.td(),fontFamily:"monospace",fontWeight:900,color:"#10b981",fontSize:13}}>${(RAMP_TOTAL.netARR/1000000).toFixed(1)}M</td>
                     <td style={{...C.td(),fontFamily:"monospace",color:"var(--text3)"}}>${(RAMP_TOTAL.capex/1000000).toFixed(1)}M</td>
@@ -664,16 +664,24 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             {/* Base case */}
             <div style={{background:"rgba(59,130,246,0.06)",border:"1px solid rgba(59,130,246,0.2)",borderRadius:10,padding:"16px 20px"}}>
               <div style={{fontSize:10,fontWeight:700,color:"var(--accent2)",letterSpacing:"0.1em",textTransform:"uppercase" as const,marginBottom:8}}>Base Case — 34 Campuses</div>
-              <div style={{fontSize:20,fontWeight:900,color:"var(--text)",marginBottom:4}}>{RAMP_TOTAL.robots.toLocaleString()} robots · ${(RAMP_TOTAL.netARR/1e6).toFixed(1)}M net ARR</div>
-              <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.6,marginBottom:8}}>86 deployments across the 34 individually profiled campuses. 18-month average sales cycle assumption. 2026–2032 ramp with 20% YoY growth from 2030.</div>
+              <div style={{fontSize:20,fontWeight:900,color:"var(--text)",marginBottom:4}}>2,344 profiled robots · ${(NEAR_TERM.net_arr/1e6).toFixed(2)}M net ARR</div>
+              <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.6,marginBottom:6}}>
+                <strong style={{color:"var(--text)"}}>34 hospitals · 82 buildings · 2,344 robots</strong><br/>
+                Avg 28.6 robots per building · Gross MRR: $7.03M · Net MRR: $4.22M<br/>
+                Net ARR: $50.63M · Capex: $23.4M · 6yr contract: $303.8M · True profit: $280.3M
+              </div>
               <div style={{fontSize:11,color:"var(--text3)",fontStyle:"italic" as const}}>Rate-limiting factor: IDN contracting timelines (12–24 months). Each deployment requires separate facilities agreement, IT integration, and elevator access provisioning.</div>
             </div>
             {/* Upside case */}
             <div style={{background:"rgba(16,185,129,0.06)",border:"1px solid rgba(16,185,129,0.2)",borderRadius:10,padding:"16px 20px"}}>
               <div style={{fontSize:10,fontWeight:700,color:"#10b981",letterSpacing:"0.1em",textTransform:"uppercase" as const,marginBottom:8}}>Upside Case — 68 Campuses (10–14 Month Cycle)</div>
-              <div style={{fontSize:20,fontWeight:900,color:"var(--text)",marginBottom:4}}>~5,900 robots · ~$106M net ARR</div>
-              <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.6,marginBottom:8}}>Doubles the campus pipeline by compressing the sales cycle to 10–14 months through pre-negotiated IDN master service agreements and reference customer pull. Same 7-year horizon.</div>
-              <div style={{fontSize:11,color:"#10b981",fontStyle:"italic" as const}}>Key lever: MSA templates that reduce per-site contracting from 6–9 months to 2–3 months. Already a defined strategic goal for the commercial team.</div>
+              <div style={{fontSize:20,fontWeight:900,color:"var(--text)",marginBottom:4}}>4,688 robots · $101.26M net ARR</div>
+              <div style={{fontSize:12,color:"var(--text2)",lineHeight:1.6,marginBottom:6}}>
+                <strong style={{color:"var(--text)"}}>68 hospitals · 164 buildings · 4,688 robots</strong><br/>
+                Avg 28.6 robots per building · Gross MRR: $14.06M · Net MRR: $8.44M<br/>
+                Net ARR: $101.26M · Capex: $46.9M · 6yr contract: $607.6M · True profit: $560.7M
+              </div>
+              <div style={{fontSize:11,color:"#10b981",fontStyle:"italic" as const}}>Key lever: IDN contracting compressed from 18 months to 10–14 months via pre-negotiated MSA templates and reference customer pull.</div>
             </div>
           </div>
 
@@ -694,10 +702,10 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
                 </thead>
                 <tbody>
                   {[
-                    {cycle:"24 months (slow)",  dpy:5,   y28:"$2.7M", y30:"$13.5M", y32:"$27M",  robots:1500, delta:"–36%", c:"#ef4444", base:false},
-                    {cycle:"18 months (base)",  dpy:8,   y28:"$9.0M", y30:"$27.0M", y32:"$53.1M",robots:2952, delta:"—",    c:"#f59e0b", base:true},
-                    {cycle:"14 months (target)",dpy:11,  y28:"$18M",  y30:"$40.5M", y32:"$72M",  robots:4000, delta:"+36%", c:"#10b981", base:false},
-                    {cycle:"10 months (upside)",dpy:15,  y28:"$27M",  y30:"$54M",   y32:"$99M+", robots:5500, delta:"+86%", c:"#3b82f6", base:false},
+                    {cycle:"24 months (slow)",  dpy:5,   y28:"$3.24M",y30:"$16.2M", y32:"$32.4M",robots:1500, delta:"–51%", c:"#ef4444", base:false},
+                    {cycle:"18 months (base)",  dpy:8,   y28:"$10.8M",y30:"$32.4M", y32:"$63.76M",robots:2952, delta:"—",   c:"#f59e0b", base:true},
+                    {cycle:"14 months (target)",dpy:11,  y28:"$21.6M",y30:"$48.6M", y32:"$86.4M",robots:4000, delta:"+36%", c:"#10b981", base:false},
+                    {cycle:"10 months (upside)",dpy:15,  y28:"$32.4M",y30:"$64.8M", y32:"$118.8M",robots:5500,delta:"+86%", c:"#3b82f6", base:false},
                   ].map(({cycle,dpy,y28,y30,y32,robots,delta,c,base},i)=>(
                     <tr key={cycle} style={{background:base?"rgba(245,158,11,0.06)":i%2===0?"transparent":"rgba(255,255,255,0.01)"}}>
                       <td style={{...C.td(),fontWeight:base?800:600,color:c}}>{cycle}{base&&<span style={{fontSize:10,marginLeft:6,color:"#f59e0b",background:"rgba(245,158,11,0.15)",padding:"1px 6px",borderRadius:3}}>CURRENT</span>}</td>
@@ -713,13 +721,13 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
               </table>
             </div>
             <div style={{padding:"10px 16px",background:"var(--surface2)",fontSize:11,color:"var(--text3)",borderTop:"1px solid var(--border)"}}>
-              ARR figures are net to Autonomi at $1,500/robot/month. All scenarios assume same 7-year horizon (2026–2032). Robots/year assumes avg 33 robots per new deployment. Compressing the sales cycle is the single highest-leverage commercial variable in the model.
+              ARR figures are net to Autonomi at $1,800/robot/month. All scenarios assume same 7-year horizon (2026–2032). Robots/year assumes avg 33 robots per new deployment. Compressing the sales cycle is the single highest-leverage commercial variable in the model.
             </div>
           </div>
         </div>
       </div>
       <div style={{...C.card(),marginBottom:20}}>
-        <div style={C.cardHead()}><span style={C.cardTitle()}>Market Opportunity — TAM / SAM / SOM</span><span style={{fontSize:11,color:"var(--text3)"}}>Revenue figures from Autonomi Seed Investment Document</span></div>
+        <div style={C.cardHead()}><span style={C.cardTitle()}>Market Opportunity — TAM / SAM</span><span style={{fontSize:11,color:"var(--text3)"}}>Revenue figures from Autonomi Seed Investment Document</span></div>
         <div style={{padding:"20px"}}>
           <div style={{display:"flex",flexDirection:"column" as const,gap:12}}>
             {MARKET_TIERS.map((tier)=>{
@@ -772,7 +780,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             A 600-bed hospital moves 37,000 items and 90,000 lbs daily — mostly by foot. 
             Autonomi&apos;s robot density formula is calibrated from actual throughput data across operating deployments 
             and reduced by 20% for conservatism. The result — <strong style={{color:"var(--text)"}}>0.056 robots per staffed bed</strong> — 
-            is applied per hospital. Multi-building campuses split this fleet across deployment units; 
+            is applied per hospital. Multi-building hospitals split this fleet across buildings; 
             the total robot count does not increase with deployment count.
           </p>
           <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginBottom:20}}>
@@ -825,18 +833,17 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
       {/* ── 34 HOSPITAL BREAKDOWN ── */}
       <div style={{...C.card(),marginBottom:20}}>
         <div style={C.cardHead()}>
-          <span style={C.cardTitle()}>Near-Term Pipeline — 34 Profiled Hospital Campuses</span>
+          <span style={C.cardTitle()}>Near-Term Pipeline — 34 Profiled Hospitals (82 Buildings)</span>
           <span style={{fontSize:11,color:"var(--text3)"}}>
-            {NEAR_TERM.total_robots.toLocaleString()} profiled robots · {NEAR_TERM.deployments} deployments · avg {NEAR_TERM.robots_per_dep} per deployment · $18K net ARR per robot · 2032 ramp target: {RAMP_TOTAL.robots.toLocaleString()} robots
+            {NEAR_TERM.total_robots.toLocaleString()} profiled robots across {NEAR_TERM.hospitals} hospitals · {NEAR_TERM.deployments} buildings / deployments · avg {NEAR_TERM.robots_per_dep.toFixed(1)} robots per building · 2032 ramp target: {RAMP_TOTAL.robots.toLocaleString()} robots
           </span>
         </div>
         <div style={{padding:"16px 20px 12px"}}>
           <p style={{fontSize:13,color:"var(--text2)",lineHeight:1.6,marginBottom:16,maxWidth:800}}>
-            Each hospital was individually profiled for campus structure. Multi-building campuses generate multiple deployment units
+            Each hospital was individually profiled for building structure. Multi-building hospitals generate multiple deployment units
             but the same total robot count — the fleet is divided across buildings, not multiplied.
-            At $2,500/robot/month gross, this pipeline represents{" "}
-            <strong style={{color:"var(--text)"}}>${(RAMP_TOTAL.grossMRR/1000000).toFixed(2)}M gross MRR</strong> and{" "}
-            <strong style={{color:"var(--text)"}}>${(RAMP_TOTAL.netARR/1000000).toFixed(1)}M net ARR</strong> at 2032 run-rate (2,952 robots across 7-year ramp).
+            At $3,000/robot/month gross, this pipeline represents{" "}
+            <strong style={{color:"var(--text)"}}>$8.856M gross MRR</strong> and <strong style={{color:"var(--text)"}}>$63.76M net ARR</strong> at 2032 run-rate (2,952 robots).
           </p>
         </div>
         <div style={{overflowX:"auto" as const}}>
@@ -852,7 +859,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
               {PROFILED_HOSPITALS.map((h,i)=>{
                 const r=calcRobots(h.beds)
                 const perDep=Math.round(r.total/h.deployments)
-                const netARR=r.total*REVENUE_MODEL.net_per_robot_year  // $18,000 per robot per year
+                const netARR=r.total*REVENUE_MODEL.net_per_robot_year  // $21,600 per robot per year
                 const c=r.total>=100?"#ef4444":r.total>=60?"#f97316":r.total>=40?"#eab308":"#10b981"
                 return (
                   <tr key={h.name} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
@@ -907,10 +914,10 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
             <tbody>
               {[
                 {range:"100–199",  count:"~700",  robots:"6–11",   capex:"$60–110K",    arr:"$108–198K",    contract:"$648K–$1.2M",  verdict:"⚠️ Borderline",   c:"#6366f1", note:"Viable only via IDN system-wide deals. Fixed integration costs must be shared."},
-                {range:"200–299",  count:"~500",  robots:"11–17",  capex:"$110–170K",   arr:"$198–306K",    contract:"$1.2M–$1.8M",  verdict:"🟡 Emerging",     c:"#eab308", note:"Min. viable standalone if high-acuity or IDN-affiliated. 6.7 month capex recovery."},
-                {range:"300–499",  count:"~380",  robots:"17–28",  capex:"$170–280K",   arr:"$306–504K",    contract:"$1.8M–$3.0M",  verdict:"✅ Core SAM",     c:"#10b981", note:"Primary target. Strong ROI at exec level. 9.8× capex return. ~380 hospitals."},
+                {range:"200–299",  count:"~500",  robots:"11–17",  capex:"$110–170K",   arr:"$198–306K",    contract:"$1.2M–$1.8M",  verdict:"🟡 Emerging",     c:"#eab308", note:"Min. viable standalone if high-acuity or IDN-affiliated. 5.6 month capex recovery."},
+                {range:"300–499",  count:"~380",  robots:"17–28",  capex:"$170–280K",   arr:"$306–504K",    contract:"$1.8M–$3.0M",  verdict:"✅ Core SAM",     c:"#10b981", note:"Primary target. Strong ROI at exec level. 13.0× capex return. ~380 hospitals."},
                 {range:"500–799",  count:"~190",  robots:"28–45",  capex:"$280–450K",   arr:"$504K–$810K",  contract:"$3.0M–$4.9M",  verdict:"🎯 Prime Target", c:"#3b82f6", note:"C-suite procurement. Multi-year budgets. Recovered by month 7. Long-term retention."},
-                {range:"800–1,499",count:"~65",   robots:"45–84",  capex:"$450K–840K",  arr:"$810K–$1.5M",  contract:"$4.9M–$9.1M",  verdict:"🏆 Premium",     c:"#f97316", note:"Multi-building = 2–4 fleet deployments. $98K true profit per robot over 6 years."},
+                {range:"800–1,499",count:"~65",   robots:"45–84",  capex:"$450K–840K",  arr:"$810K–$1.5M",  contract:"$4.9M–$9.1M",  verdict:"🏆 Premium",     c:"#f97316", note:"Multi-building = 2–4 fleet deployments. $119.6K true profit per robot over 6 years."},
                 {range:"1,500+",   count:"~10",   robots:"84–168+",capex:"$840K–$1.7M+",arr:"$1.5M–$3.0M+", contract:"$9.1M–$18M+",  verdict:"⭐ Landmark",    c:"#ef4444", note:"NYP: 184 robots → $18M 6yr net contract. AdventHealth Orlando: 166 robots → $16M 6yr net contract (2032 forecast based on 2,966 staffed beds × 0.056 formula; not current deployment)."},
               ].map(({range,count,robots,capex,arr,contract,verdict,c,note},i)=>(
                 <tr key={range} style={{background:i%2===0?"transparent":"rgba(255,255,255,0.015)"}}>
@@ -953,7 +960,7 @@ function ThesisTab({hospitals}:{hospitals:Hospital[]}){
       <div style={{background:"rgba(245,158,11,0.06)",border:"1px solid rgba(245,158,11,0.2)",borderRadius:10,padding:"14px 18px",marginBottom:20}}>
         <div style={{fontSize:10,fontWeight:700,color:"#f59e0b",marginBottom:6,letterSpacing:"0.05em",textTransform:"uppercase" as const}}>Confidential — Forward-Looking Statements</div>
         <p style={{fontSize:12,color:"var(--text2)",margin:0,lineHeight:1.7}}>
-          Revenue figures (TAM $34.46B, SAM $8.6B, SOM $647M) and unit economics ($2,500/robot/month, 6-year RaaS) sourced from the Autonomi/Ctrl Seed Investment Document.
+          Revenue figures (TAM $34.46B, SAM $8.6B) and unit economics ($3,000 gross/robot/month, 60% net, 6-year RaaS) sourced from the Autonomi/Ctrl Seed Investment Document.
           Robot density ratios derived from live deployments, reduced 20% for conservatism. Hospital counts from AHA Annual Survey 2024 and Definitive Health HospitalView August 2025.
           Forward-looking statements involve risks and uncertainties. This document is for authorised investors and partners only. Do not distribute.
         </p>
